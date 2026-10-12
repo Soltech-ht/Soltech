@@ -19,8 +19,9 @@ window.__firebaseReady = (async function(){
   for(const base of CDNs){
     try{
       if(typeof firebase==='undefined')await loadScript(base+'firebase-app-compat.js');
+      if(typeof firebase!=='undefined'&&!firebase.auth)await loadScript(base+'firebase-auth-compat.js');
       if(typeof firebase!=='undefined'&&!firebase.firestore)await loadScript(base+'firebase-firestore-compat.js');
-      if(typeof firebase!=='undefined'&&typeof firebase.firestore==='function'){console.log('✅ Firebase: '+base);return true}
+      if(typeof firebase!=='undefined'&&typeof firebase.firestore==='function'&&typeof firebase.auth==='function'){console.log('✅ Firebase Auth + Firestore: '+base);return true}
     }catch(e){console.warn('⚠️',e.message)}
   }
   return false;
@@ -207,6 +208,10 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .picker-item .pi-name{font-weight:600;font-size:13.5px}
 .picker-item .pi-meta{font-size:11px;color:var(--muted);margin-top:2px}
 .picker-item .pi-price{font-weight:700;color:var(--o);font-size:14px;white-space:nowrap}
+.pass-wrap{position:relative}
+.pass-wrap input{padding-right:44px}
+.pass-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;font-size:15px;padding:6px 10px;border-radius:6px;line-height:1;color:var(--muted);transition:background .2s}
+.pass-toggle:hover{background:#f1f5f9;color:var(--ink)}
 @media(max-width:1024px){.cards{grid-template-columns:repeat(2,1fr)}.cats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:820px){
 .grid,.form,.form.three{grid-template-columns:1fr}
@@ -262,11 +267,15 @@ html,body{background:#fff;margin:0;padding:0;width:8.5in;font-size:13px}
   <div class="box">
     <div class="logo-wrap" id="loginLogo"></div>
     <h3>Connexion à votre espace</h3>
-    <label for="lu">Utilisateur</label>
-    <input id="lu" placeholder="Nom d'utilisateur" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
+    <label for="lu">Adresse e-mail</label>
+    <input id="lu" type="email" placeholder="nom@exemple.com" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
     <label for="lp">Mot de passe</label>
-    <input id="lp" type="password" placeholder="Mot de passe" autocomplete="off">
+    <div class="pass-wrap">
+      <input id="lp" type="password" placeholder="Mot de passe" autocomplete="current-password">
+      <button type="button" class="pass-toggle" onclick="togglePass('lp',this)" aria-label="Afficher le mot de passe">👁️</button>
+    </div>
     <button class="btn p" style="width:100%;margin-top:20px;padding:14px" onclick="doLogin()">Se connecter</button>
+    <button class="btn l s" type="button" style="width:100%;margin-top:8px" onclick="resetFirebasePassword()">Mot de passe oublié ?</button>
     <p id="err" style="color:#dc2626;min-height:1.2em;margin:10px 0 0;font-size:12.5px;text-align:center"></p>
     <p id="cloudInit" class="muted" style="text-align:center;margin-top:16px;font-size:11px"></p>
     <div style="display:flex;gap:6px;justify-content:center;margin-top:12px">
@@ -463,7 +472,7 @@ html,body{background:#fff;margin:0;padding:0;width:8.5in;font-size:13px}
       </div>
       <div class="panel">
         <div class="panel-head"><h3>🔐 Changer mon mot de passe</h3></div>
-        <div class="form"><div><label>Mot de passe actuel</label><input id="oldPass" type="password"></div><div><label>Nouveau mot de passe</label><input id="newPass" type="password"></div></div>
+        <div class="form"><div><label>Mot de passe actuel</label><div class="pass-wrap"><input id="oldPass" type="password"><button type="button" class="pass-toggle" onclick="togglePass('oldPass',this)">👁️</button></div></div><div><label>Nouveau mot de passe</label><div class="pass-wrap"><input id="newPass" type="password"><button type="button" class="pass-toggle" onclick="togglePass('newPass',this)">👁️</button></div></div></div>
         <div class="actions"><button class="btn p" onclick="changeMyPassword()">Changer</button></div>
       </div>
     </section>
@@ -555,6 +564,11 @@ const addDays=(d,n)=>{const x=new Date((/^\d{4}-\d{2}-\d{2}$/.test(String(d))?d+
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const fmtDate=d=>{if(!d)return '';const dt=new Date(d);if(isNaN(dt))return d;return dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})};
 const now=()=>new Date().toISOString();
+function togglePass(id,btn){
+  const el=$(id);if(!el)return;
+  if(el.type==='password'){el.type='text';if(btn)btn.textContent='🙈'}
+  else{el.type='password';if(btn)btn.textContent='👁️'}
+}
 function toast(m,t='info'){const x=document.createElement('div');x.className='toast toast-'+t;x.textContent=m;document.body.appendChild(x);requestAnimationFrame(()=>x.classList.add('show'));setTimeout(()=>{x.classList.remove('show');setTimeout(()=>x.remove(),300)},3800)}
 function notif(title,body,type='info'){
   const n=document.createElement('div');n.className='notif '+type;
@@ -616,22 +630,25 @@ function defaultData(){
       extraMessage:'Votre satisfaction est notre priorité. Pour toute question, contactez-nous.'
     },
     cats:['Panneaux solaires','Batteries','Onduleurs / Inverters','Contrôleurs / Régulateurs','Câbles & accessoires','Matériel électrique','Éclairage LED','Pompes solaires','Supports & fixation','Installation & services','Autre'],
-    users:[{id:uid(),_updatedAt:now(),u:'admin',name:'Administrateur',pass:'admin123',role:'ADMIN',created:now()}],
+    users:[{id:uid(),_updatedAt:now(),u:'admin',name:'Administrateur',role:'ADMIN',created:now(),authLinked:false}],
     clients:[],products:[],proformas:[],invoices:[],payments:[],refunds:[],repairs:[],requests:[],history:[]
   };
 }
 
-let D=defaultData(),U=null,fbReady=false,fbError=null;
+let D=defaultData(),U=null,fbReady=false,fbError=null,auth=null,authReady=false,authSessionTask=null,unsubscribeState=null;
 let syncState={status:'connecting',lastSync:null};
 let firstLoad=true,lastPendingCount=0,cloudSynced=false;
 
+function sanitizeUserRecords(){
+  if(!Array.isArray(D.users))D.users=[];
+  D.users.forEach(u=>{if(u&&typeof u==='object')delete u.pass;});
+}
 function active(list){return (list||[]).filter(x=>x&&!x._deleted)}
 function activeProducts(){return active(D.products)}
 function activeClients(){return active(D.clients)}
 function activeUsers(){return active(D.users)}
 function activeCats(){return (D.cats||[]).filter(c=>!D._deletedCats?.includes(c))}
 
-/* ═══ AUTO CODE PWODWI ═══ */
 function generateProductCode(catName){
   const prefix = (catName||'GEN')
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
@@ -695,28 +712,100 @@ function stampLocalItems(){
 function initFirebase(){
   try{
     if(typeof firebase==='undefined')throw new Error('SDK Firebase non chargé');
-    firebase.initializeApp(FIREBASE_CONFIG);
+    if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+    auth=firebase.auth();
     window.db=firebase.firestore();
-    db.enablePersistence({synchronizeTabs:true}).catch(e=>console.log('Persistence:',e.message));
-    fbReady=true;
-    $('cloudInit').textContent='☁️ Cloud connecté';
+    db.enablePersistence({synchronizeTabs:true}).catch(e=>console.log('Persistance Firestore:',e.message));
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e=>console.warn('Persistance Auth:',e.message));
+    fbReady=true;authReady=true;
+    $('cloudInit').textContent='🔐 Authentification Firebase prête — connexion requise';
     $('cloudInit').style.color='#059669';
-    listenRealtime();
+    auth.onAuthStateChanged(user=>{
+      if(user){loadAuthenticatedSession(user).catch(err=>{
+        console.error('Session Firebase:',err);
+        const e=$('err');if(e)e.textContent=authErrorMessage(err);
+        $('err').style.color='#dc2626';
+        if(!U)auth.signOut().catch(()=>{});
+      });}
+      else{
+        if(unsubscribeState){unsubscribeState();unsubscribeState=null;}
+        U=null;authSessionTask=null;cloudSynced=false;
+        $('app').classList.add('hidden');$('loginScreen').classList.remove('hidden');
+        updateCloudStatus('offline','Connexion requise');
+      }
+    });
   }catch(e){
-    fbError=e.message;fbReady=false;
-    $('cloudInit').textContent='⚠️ '+e.message;
+    fbError=e.message;fbReady=false;authReady=false;
+    $('cloudInit').textContent='⚠️ '+e.message+' — mode sécurisé indisponible';
     $('cloudInit').style.color='#dc2626';
-    updateCloudStatus('offline','Mode local');
-    const local=storage.get(K);
-    if(local){try{D=JSON.parse(local);stampLocalItems()}catch(err){}}
-    else{storage.set(K,JSON.stringify(D))}
-    firstLoad=false;cloudSynced=true;
+    updateCloudStatus('offline','Firebase indisponible');
+    firstLoad=false;cloudSynced=false;
   }
 }
+function authErrorMessage(err){
+  const c=err&&err.code||'';
+  const map={
+    'auth/invalid-email':'Adresse e-mail invalide.',
+    'auth/user-disabled':'Ce compte a été désactivé.',
+    'auth/user-not-found':'Compte introuvable. Vérifiez l’adresse e-mail.',
+    'auth/wrong-password':'Mot de passe incorrect.',
+    'auth/invalid-credential':'Identifiants incorrects.',
+    'auth/too-many-requests':'Trop de tentatives. Réessayez plus tard.',
+    'auth/network-request-failed':'Connexion réseau impossible. Vérifiez Internet.',
+    'auth/email-already-in-use':'Cette adresse e-mail est déjà utilisée.',
+    'auth/weak-password':'Le mot de passe doit contenir au moins 12 caractères.',
+    'permission-denied':'Accès Firestore refusé. Vérifiez les règles de sécurité.',
+    'auth/requires-recent-login':'Reconnectez-vous avant de réaliser cette opération.'
+  };
+  return map[c]||((err&&err.message)||'Une erreur de sécurité est survenue.');
+}
+async function loadAuthenticatedSession(user){
+  if(!user||!db||!auth)return;
+  let legacyPasswordFields=false;
+  if(authSessionTask)return authSessionTask;
+  authSessionTask=(async()=>{
+    $('err').textContent='Vérification du compte et des autorisations…';
+    $('err').style.color='#2563eb';
+    const profileSnap=await db.collection('userProfiles').doc(user.uid).get();
+    if(!profileSnap.exists)throw new Error('Profil SOLTECH absent. Un administrateur doit créer userProfiles/'+user.uid+' dans Firestore.');
+    const profile=profileSnap.data()||{};
+    if(profile.active!==true)throw new Error('Ce compte SOLTECH est désactivé. Contactez l’administrateur.');
+    const role=String(profile.role||'').toUpperCase();
+    if(!PERMISSIONS[role])throw new Error('Rôle SOLTECH invalide dans userProfiles.');
+    // Charger les données seulement après la validation du profil.
+    const stateSnap=await db.collection('state').doc('current').get();
+    if(stateSnap.exists&&stateSnap.data()&&stateSnap.data().data){
+      D=smartMerge(D,stateSnap.data().data);
+      stampLocalItems();legacyPasswordFields=(D.users||[]).some(x=>x&&Object.prototype.hasOwnProperty.call(x,'pass'));sanitizeUserRecords();storage.set(K,JSON.stringify(D));
+    }else{
+      const local=storage.get(K);
+      if(local){try{D=Object.assign(defaultData(),JSON.parse(local));stampLocalItems()}catch(e){}}
+    }
+    const email=String(user.email||profile.email||'').toLowerCase();
+    const username=String(profile.username||email.split('@')[0]||'utilisateur');
+    let record=(D.users||[]).find(x=>!x._deleted&&(x.firebaseUid===user.uid||(x.email&&String(x.email).toLowerCase()===email)));
+    if(!record)record=(D.users||[]).find(x=>!x._deleted&&!x.firebaseUid&&!x.email&&String(x.u||'').toLowerCase()===username.toLowerCase());
+    if(!record){
+      record={id:uid(),u:username,name:profile.name||username,role,created:profile.createdAt||now(),email,firebaseUid:user.uid,authLinked:true};
+      D.users.push(record);
+    }
+    record.email=email;record.firebaseUid=user.uid;record.u=profile.username||record.u||username;
+    record.name=profile.name||record.name||username;record.role=role;record.authLinked=true;
+    delete record.pass;record._updatedAt=now();
+    U=record;sanitizeUserRecords();storage.ss('s',user.uid);storage.set(K,JSON.stringify(D));
+    if(unsubscribeState){unsubscribeState();unsubscribeState=null;}
+    listenRealtime();
+    $('err').textContent='';$('err').style.color='';
+    openApp();
+    if(legacyPasswordFields)setTimeout(()=>saveCloud(true),500);
+  })();
+  try{return await authSessionTask;}finally{authSessionTask=null;}
+}
 function listenRealtime(){
-  if(!fbReady)return;
-  updateCloudStatus('syncing','Connexion…');
-  db.collection('state').doc('current').onSnapshot(doc=>{
+  if(!fbReady||!auth||!auth.currentUser)return;
+  updateCloudStatus('syncing','Connexion sécurisée…');
+  if(unsubscribeState){unsubscribeState();unsubscribeState=null;}
+  unsubscribeState=db.collection('state').doc('current').onSnapshot(doc=>{
     if(doc.exists){
       const remote=doc.data();
       if(remote&&remote.data){
@@ -724,28 +813,22 @@ function listenRealtime(){
         const merged=smartMerge(D,remote.data);
         const ARRAYS=['users','clients','products','proformas','invoices','payments','refunds','repairs','requests'];
         let preservedCount=0;
-        ARRAYS.forEach(key=>{
-          const remoteIds=new Set((remote.data[key]||[]).map(x=>x.id));
-          const localOnly=(localBackup[key]||[]).filter(x=>x.id&&!remoteIds.has(x.id));
-          preservedCount+=localOnly.length;
-        });
-        D=merged;
+        ARRAYS.forEach(key=>{const remoteIds=new Set((remote.data[key]||[]).map(x=>x.id));preservedCount+=(localBackup[key]||[]).filter(x=>x.id&&!remoteIds.has(x.id)).length;});
+        D=merged;sanitizeUserRecords();
         ARRAYS.forEach(k=>{if(Array.isArray(D[k]))D[k].forEach(o=>{if(!o.id)o.id=uid()})});
-        storage.set(K,JSON.stringify(D));
-        syncState.lastSync=new Date();
-        syncState.status='online';
-        cloudSynced=true;
-        updateCloudStatus('online','Synchronisé');
-        if(preservedCount>0)console.log('🔀 Fusion:',preservedCount);
-        if(firstLoad)firstLoad=false;
-        if(U)render();
+        if(U&&auth.currentUser){
+          const profileRecord=D.users.find(x=>x.firebaseUid===auth.currentUser.uid||String(x.email||'').toLowerCase()===String(auth.currentUser.email||'').toLowerCase());
+          if(profileRecord){profileRecord.role=U.role;profileRecord.firebaseUid=auth.currentUser.uid;profileRecord.email=auth.currentUser.email;delete profileRecord.pass;U=profileRecord;}
+        }
+        storage.set(K,JSON.stringify(D));syncState.lastSync=new Date();syncState.status='online';cloudSynced=true;
+        updateCloudStatus('online','Synchronisé');if(firstLoad)firstLoad=false;if(U)render();
         if(preservedCount>0&&!firstLoad)setTimeout(()=>saveCloud(true),800);
-      } else {cloudSynced=true;saveCloud(true)}
-    } else {cloudSynced=true;saveCloud(true)}
+      }else{cloudSynced=true;updateCloudStatus('online','Cloud prêt');}
+    }else{cloudSynced=true;updateCloudStatus('online','Cloud prêt');}
   },err=>{
-    console.error('Snapshot:',err);
-    cloudSynced=true;
-    updateCloudStatus('offline','Erreur: '+err.message);
+    console.error('Snapshot Firestore:',err);cloudSynced=true;
+    updateCloudStatus('offline','Accès refusé / erreur Firestore');
+    if(err&&err.code==='permission-denied')toast('Accès Firestore refusé. Vérifiez les règles de sécurité.','error');
   });
 }
 function updateCloudStatus(type,text){
@@ -770,15 +853,16 @@ function save(){
 }
 let cloudWriteQueue=Promise.resolve();
 async function saveCloud(silent){
-  if(!fbReady)return false;
+  if(!fbReady||!auth||!auth.currentUser){if(!silent)toast('Connexion Firebase requise pour enregistrer dans le cloud.','error');return false;}
   const snapshot=JSON.parse(JSON.stringify(D));
+  (snapshot.users||[]).forEach(u=>{if(u)delete u.pass;});
   const write=async()=>{try{
     updateCloudStatus('syncing','Envoi…');
     if(snapshot.history&&snapshot.history.length>500)snapshot.history=snapshot.history.slice(-500);
-    const payload=JSON.stringify({data:snapshot,meta:{updatedAt:now(),updatedBy:U?U.u:'anon',version:10}});
+    const payload=JSON.stringify({data:snapshot,meta:{updatedAt:now(),updatedBy:U?(U.email||U.u):auth.currentUser.email,version:10}});
     const sizeKB=(payload.length/1024).toFixed(1);
     if(sizeKB>900)throw new Error('Données trop volumineuses');
-    await db.collection('state').doc('current').set({data:snapshot,meta:{updatedAt:now(),updatedBy:U?U.u:'anon',version:10}});
+    await db.collection('state').doc('current').set({data:snapshot,meta:{updatedAt:now(),updatedBy:U?(U.email||U.u):auth.currentUser.email,version:10}});
     syncState.lastSync=new Date();syncState.status='online';
     updateCloudStatus('online','Synchronisé');
     if(!silent)toast('☁️ Enregistré ('+sizeKB+' Ko)','success');
@@ -809,14 +893,14 @@ async function diagnoseCloud(){
 }
 function copyDiag(){if(window.__diagReport)navigator.clipboard.writeText(window.__diagReport).then(()=>toast('✓ Copié','success'))}
 async function forceCloudRefresh(){
-  if(!fbReady)return toast('❌ Firebase non chargé','error');
+  if(!fbReady||!auth||!auth.currentUser)return toast('Connectez-vous à Firebase avant de charger les données.','error');
   const e=$('err');e.textContent='⏳ Chargement…';e.style.color='#2563eb';
   try{
     const doc=await db.collection('state').doc('current').get();
     if(!doc.exists){e.textContent='⚠ Aucune donnée';e.style.color='#d97706';return}
     const remote=doc.data();
     if(!remote||!remote.data){e.textContent='⚠ Cloud vide';e.style.color='#d97706';return}
-    D=smartMerge(D,remote.data);
+    D=smartMerge(D,remote.data);sanitizeUserRecords();
     storage.set(K,JSON.stringify(D));
     cloudSynced=true;
     e.textContent='✓ '+D.users.length+' utilisateur(s)';
@@ -890,37 +974,23 @@ function updateRequestsBadge(){
   lastPendingCount=pending;
 }
 
-function doLogin(){
-  const u=$('lu').value.trim(),p=$('lp').value,e=$('err');
+async function doLogin(){
+  const email=$('lu').value.trim().toLowerCase(),password=$('lp').value,e=$('err');
   e.textContent='';e.style.color='';
-  if(!u){e.textContent='Entrez votre nom d\'utilisateur';$('lu').focus();return}
-  if(!p){e.textContent='Entrez votre mot de passe';$('lp').focus();return}
-  if(fbReady&&!cloudSynced){
-    e.textContent='⏳ Synchronisation…';e.style.color='#2563eb';
-    let w=0;
-    const c=setInterval(()=>{
-      w+=100;
-      if(cloudSynced||w>6000){clearInterval(c);e.textContent='';e.style.color='';attemptLogin(u,p)}
-    },100);
-    return;
-  }
-  attemptLogin(u,p);
+  if(!email||!/^\S+@\S+\.\S+$/.test(email)){e.textContent='Entrez une adresse e-mail valide.';$('lu').focus();return;}
+  if(!password){e.textContent='Entrez votre mot de passe.';$('lp').focus();return;}
+  if(!authReady||!auth){e.textContent='Firebase Authentication n’est pas prêt. Vérifiez votre connexion et la configuration Firebase.';e.style.color='#dc2626';return;}
+  const btn=document.querySelector('#loginScreen .btn.p');if(btn){btn.disabled=true;btn.textContent='Connexion…';}
+  try{await auth.signInWithEmailAndPassword(email,password);}
+  catch(err){e.textContent=authErrorMessage(err);e.style.color='#dc2626';}
+  finally{if(btn){btn.disabled=false;btn.textContent='Se connecter';}}
 }
-function attemptLogin(u,p){
-  const e=$('err');
-  if(!D.users||!D.users.length){
-    const local=storage.get(K);
-    if(local){try{const parsed=JSON.parse(local);if(parsed&&parsed.users&&parsed.users.length){D=Object.assign(defaultData(),parsed)}}catch(err){}}
-  }
-  if(!D.users||!D.users.length){e.textContent='Données non disponibles.';return}
-  const f=D.users.find(x=>!x._deleted&&String(x.u)===String(u)&&String(x.pass)===String(p));
-  if(!f){
-    const byName=D.users.find(x=>!x._deleted&&String(x.u)===String(u));
-    if(byName)e.textContent='Mot de passe incorrect pour "'+u+'"';
-    else e.textContent='Utilisateur introuvable.';
-    return;
-  }
-  U=f;storage.ss('s',U.u);openApp();
+async function resetFirebasePassword(){
+  const email=$('lu').value.trim().toLowerCase(),e=$('err');
+  if(!email||!/^\S+@\S+\.\S+$/.test(email)){e.textContent='Entrez votre adresse e-mail dans le champ ci-dessus.';e.style.color='#dc2626';$('lu').focus();return;}
+  if(!authReady||!auth){e.textContent='Firebase Authentication n’est pas prêt.';e.style.color='#dc2626';return;}
+  try{await auth.sendPasswordResetEmail(email);e.textContent='Si le compte existe, un e-mail de réinitialisation a été envoyé.';e.style.color='#059669';}
+  catch(err){e.textContent=authErrorMessage(err);e.style.color='#dc2626';}
 }
 function openApp(){
   $('loginScreen').classList.add('hidden');
@@ -929,10 +999,12 @@ function openApp(){
   $('role').textContent=U.role;
   applyPermissions();render();updateRequestsBadge();
 }
-function logout(){
+async function logout(){
   storage.sd('s');U=null;
+  if(unsubscribeState){unsubscribeState();unsubscribeState=null;}
   $('app').classList.add('hidden');$('loginScreen').classList.remove('hidden');
   $('lu').value='';$('lp').value='';$('err').textContent='';$('err').style.color='';
+  if(auth&&auth.currentUser){try{await auth.signOut()}catch(e){console.warn('Déconnexion Firebase:',e.message)}}
 }
 function applyPermissions(){
   const perms=PERMISSIONS[U.role];
@@ -1810,63 +1882,95 @@ function renderRequests(){
 
 function renderUsers(){
   if(!$('utb'))return;
-  $('utb').innerHTML=activeUsers().map(u=>`<tr><td><b>${esc(u.u)}</b></td><td>${esc(u.name)}</td><td>${esc(u.role)}</td><td>${u.created?fmtDate(u.created.slice(0,10)):'—'}</td><td class="row-actions">${can('edit','users')?`<button onclick="userForm('${u.id}')">✏️</button>`:`<button class="locked">🔒</button>`}${u.u!==U.u&&can('delete','users')?`<button class="del" onclick="deleteUser('${u.id}')">🗑️</button>`:''}</td></tr>`).join('')||'<tr><td colspan="5" class="muted" style="text-align:center;padding:24px">Aucun utilisateur.</td></tr>';
-  const addBtn=document.querySelector('#users .panel-head .btn.p');
-  if(addBtn)addBtn.style.display=can('create','users')?'inline-flex':'none';
+  $('utb').innerHTML=activeUsers().map(u=>`<tr><td><b>${esc(u.u)}</b><div class="muted" style="font-size:11px">${esc(u.email||'E-mail non lié')}</div></td><td>${esc(u.name)}</td><td>${esc(u.role)}</td><td>${u.created?fmtDate(String(u.created).slice(0,10)):'—'}</td><td class="row-actions">${can('edit','users')?`<button onclick="userForm('${u.id}')">✏️</button>`:`<button class="locked">🔒</button>`}${u.u!==U.u&&can('delete','users')?`<button class="del" onclick="deleteUser('${u.id}')">🗑️</button>`:''}</td></tr>`).join('')||'<tr><td colspan="5" class="muted" style="text-align:center;padding:24px">Aucun utilisateur.</td></tr>';
+  const addBtn=document.querySelector('#users .panel-head .btn.p');if(addBtn)addBtn.style.display=can('create','users')?'inline-flex':'none';
 }
 function userForm(id){
   if(!can(id?'edit':'create','users'))return toast('Permission refusée','error');
   const e=id?activeUsers().find(x=>x.id===id):null;
-  const u=e||{u:'',name:'',role:'VENDEUR'};
+  const u=e||{u:'',name:'',email:'',role:'VENDEUR'};
   const roles=['ADMIN','VENDEUR','CAISSIER','TECHNICIEN'];
-  modal(`<h2>${e?'Modifier':'Nouvel'} utilisateur</h2>
+  modal(`<h2>${e?'Modifier':'Créer'} un utilisateur Firebase</h2>
+    ${!e?'<p class="muted">Un compte Firebase Authentication sera créé. Le mot de passe ne sera pas stocké dans les données SOLTECH.</p>':''}
     <div class="form">
       <div><label>Username *</label><input id="uu" value="${esc(u.u)}" ${e?'readonly':''} autocomplete="off" autocapitalize="none"></div>
-      <div><label>Nom affiché</label><input id="un" value="${esc(u.name)}"></div>
-      <div><label>Mot de passe ${e?'(vide = inchangé)':'*'}</label><input id="up" type="password"></div>
-      ${!e?`<div><label>Confirmer mot de passe *</label><input id="up2" type="password"></div>`:''}
+      <div><label>Nom affiché *</label><input id="un" value="${esc(u.name)}"></div>
+      <div><label>Adresse e-mail ${e?'':'*'}</label><input id="uemail" type="email" value="${esc(u.email||'')}" ${e?'readonly':''} autocomplete="email"></div>
+      ${!e?`<div><label>Mot de passe initial * (12 caractères minimum)</label><div class="pass-wrap"><input id="up" type="password" autocomplete="new-password"><button type="button" class="pass-toggle" onclick="togglePass('up',this)">👁️</button></div></div><div><label>Confirmer le mot de passe *</label><div class="pass-wrap"><input id="up2" type="password" autocomplete="new-password"><button type="button" class="pass-toggle" onclick="togglePass('up2',this)">👁️</button></div></div>`:''}
       <div><label>Rôle</label><select id="ur">${roles.map(r=>`<option ${r===u.role?'selected':''}>${r}</option>`).join('')}</select></div>
     </div>
-    <div class="actions"><button class="btn p" onclick="saveUser('${id||''}')">${e?'Enregistrer':'Créer'}</button><button class="btn l" onclick="closeModal()">Annuler</button></div>`);
+    <div class="actions"><button class="btn p" onclick="saveUser('${id||''}')">${e?'Enregistrer':'Créer le compte'}</button><button class="btn l" onclick="closeModal()">Annuler</button></div>`);
 }
-function saveUser(id){
+async function saveUser(id){
   if(!can(id?'edit':'create','users'))return toast('Permission refusée','error');
-  const un=$('uu').value.trim(),name=$('un').value.trim()||un,pass=$('up').value,pass2=id?null:($('up2')?.value||''),role=$('ur').value;
-  if(!un){toast('Username obligatoire','error');return}
+  if(!auth||!auth.currentUser||U?.role!=='ADMIN')return toast('Une session administrateur Firebase est obligatoire.','error');
+  const un=$('uu').value.trim(),name=$('un').value.trim()||un,email=($('uemail')?.value||'').trim().toLowerCase(),role=$('ur').value;
+  if(!un)return toast('Username obligatoire','error');
   if(!id){
-    if(!pass)return toast('Mot de passe obligatoire','error');
-    if(pass.length<12)return toast('Utilisez au moins 12 caractères pour le mot de passe.','error');
-    if(pass!==pass2)return toast('Les mots de passe ne correspondent pas','error');
-    if(activeUsers().some(x=>String(x.u).toLowerCase()===un.toLowerCase()))return toast('Username déjà utilisé','error');
-    D.users.push({id:uid(),_updatedAt:now(),u:un,name,pass,role,created:now()});
-    log('Création user',un);render();closeModal();
-    toast('✓ '+un+' peut se connecter','success');
-    if(fbReady)saveCloud(true);
-  } else {
+    const pass=$('up').value,pass2=$('up2').value;
+    if(!email||!/^\S+@\S+\.\S+$/.test(email))return toast('Adresse e-mail valide obligatoire.','error');
+    if(!pass||pass.length<12)return toast('Le mot de passe doit contenir au moins 12 caractères.','error');
+    if(pass!==pass2)return toast('Les mots de passe ne correspondent pas.','error');
+    const legacyRecord=activeUsers().find(x=>String(x.u).toLowerCase()===un.toLowerCase()&&!x.firebaseUid&&!x.email);
+    if(activeUsers().some(x=>String(x.u).toLowerCase()===un.toLowerCase()&&(!legacyRecord||x.id!==legacyRecord.id)))return toast('Username déjà utilisé.','error');
+    if(activeUsers().some(x=>String(x.email||'').toLowerCase()===email))return toast('E-mail déjà lié à un utilisateur SOLTECH.','error');
+    let secondaryApp=null,createdAuthUser=null;
+    try{
+      const appName='SOLTECH_USER_CREATOR_'+Date.now();
+      secondaryApp=firebase.initializeApp(FIREBASE_CONFIG,appName);
+      const secondaryAuth=secondaryApp.auth();
+      const credential=await secondaryAuth.createUserWithEmailAndPassword(email,pass);
+      createdAuthUser=credential.user;
+      const profile={email,username:un,name,role,active:true,createdAt:now(),createdBy:auth.currentUser.uid};
+      await db.collection('userProfiles').doc(createdAuthUser.uid).set(profile);
+      const rec=legacyRecord||{id:uid(),created:now()};
+      Object.assign(rec,{_updatedAt:now(),u:un,name,email,firebaseUid:createdAuthUser.uid,authLinked:true,role});
+      delete rec.pass;if(!D.users.some(x=>x.id===rec.id))D.users.push(rec);
+      log('Création compte Firebase',un+' ('+email+')');save();closeModal();
+      toast('Compte créé. L’utilisateur peut se connecter avec son e-mail.','success');
+      try{await secondaryAuth.signOut();await secondaryApp.delete()}catch(e){}
+    }catch(err){
+      console.error('Création utilisateur Firebase:',err);
+      toast('Création impossible : '+authErrorMessage(err),'error');
+      if(secondaryApp){try{await secondaryApp.delete()}catch(e){}}
+    }
+  }else{
     const u=D.users.find(x=>x.id===id);if(!u)return;
-    if(pass){if(pass.length<12)return toast('Utilisez au moins 12 caractères pour le mot de passe.','error');u.pass=pass}
-    u.name=name;u.role=role;u._updatedAt=now();
-    log('Modification user',un);toast('✓ Modifié','success');
-    save();closeModal();
+    if(!u.firebaseUid)return toast('Cet ancien utilisateur n’est pas lié à Firebase Authentication. Créez un compte Firebase en réutilisant son username pour le migrer.','error');
+    if(u.firebaseUid===auth.currentUser.uid&&role!=='ADMIN')return toast('Vous ne pouvez pas retirer votre propre rôle ADMIN.','error');
+    try{
+      const profileRef=db.collection('userProfiles').doc(u.firebaseUid);
+      await profileRef.update({name,role,updatedAt:now()});
+      u.name=name;u.role=role;u._updatedAt=now();delete u.pass;
+      log('Modification profil Firebase',un+' — '+role);save();closeModal();toast('Profil mis à jour.','success');
+      if(u.firebaseUid===auth.currentUser.uid){U=u; $('who').textContent=U.name;$('role').textContent=U.role;applyPermissions();render();}
+    }catch(err){toast('Modification impossible : '+authErrorMessage(err),'error');}
   }
 }
-function deleteUser(id){
-  if(!can('delete','users'))return toast('Permission refusée','error');
+async function deleteUser(id){
+  if(!can('delete','users')||U?.role!=='ADMIN')return toast('Permission refusée','error');
   const u=D.users.find(x=>x.id===id);if(!u)return;
-  if(u.u===U.u)return toast('Impossible de vous supprimer','error');
-  if(activeUsers().length<=1)return toast('Au moins un utilisateur requis','error');
-  if(!confirm('Supprimer « '+u.u+' » ?'))return;
-  u._deleted=true;u._updatedAt=now();
-  log('Suppression user',u.u);toast('Supprimé','success');save();
+  if(u.firebaseUid===auth?.currentUser?.uid||u.u===U.u)return toast('Impossible de désactiver votre propre compte.','error');
+  if(activeUsers().length<=1)return toast('Au moins un utilisateur requis.','error');
+  if(!confirm('Désactiver le compte « '+u.u+' » ? Il ne pourra plus accéder aux données protégées.'))return;
+  try{
+    if(u.firebaseUid)await db.collection('userProfiles').doc(u.firebaseUid).update({active:false,disabledAt:now(),disabledBy:auth.currentUser.uid});
+    u._deleted=true;u._updatedAt=now();delete u.pass;
+    log('Désactivation utilisateur',u.u);save();toast('Compte désactivé. Pour le supprimer complètement, utilisez Firebase Authentication dans la console.','success');
+  }catch(err){toast('Désactivation impossible : '+authErrorMessage(err),'error');}
 }
-function changeMyPassword(){
+async function changeMyPassword(){
   const oldP=$('oldPass').value,np=$('newPass').value;
-  if(!oldP||!np)return toast('Remplissez les deux champs','error');
-  if(oldP!==U.pass)return toast('Mot de passe actuel incorrect','error');
-  if(np.length<12)return toast('Utilisez au moins 12 caractères pour le mot de passe.','error');
-  U.pass=np;U._updatedAt=now();log('Changement mot de passe','');save();
-  $('oldPass').value='';$('newPass').value='';
-  toast('Mot de passe changé','success');
+  if(!auth?.currentUser||!U)return toast('Connectez-vous avec Firebase Authentication.','error');
+  if(!oldP||!np)return toast('Remplissez les deux champs.','error');
+  if(np.length<12)return toast('Utilisez au moins 12 caractères pour le nouveau mot de passe.','error');
+  try{
+    const credential=firebase.auth.EmailAuthProvider.credential(auth.currentUser.email,oldP);
+    await auth.currentUser.reauthenticateWithCredential(credential);
+    await auth.currentUser.updatePassword(np);
+    $('oldPass').value='';$('newPass').value='';
+    log('Changement mot de passe Firebase','');save();toast('Mot de passe Firebase changé.','success');
+  }catch(err){toast('Changement impossible : '+authErrorMessage(err),'error');}
 }
 
 function renderReports(){
@@ -2199,7 +2303,7 @@ $('sideLogo').innerHTML=LOGO({height:52,dark:true});
 
 (function preload(){
   const local=storage.get(K);
-  if(local){try{D=JSON.parse(local);stampLocalItems()}catch(e){}}
+  if(local){try{D=JSON.parse(local);stampLocalItems();sanitizeUserRecords();storage.set(K,JSON.stringify(D));}catch(e){}}
 })();
 
 (async function(){
@@ -2211,7 +2315,7 @@ $('sideLogo').innerHTML=LOGO({height:52,dark:true});
     if(el){el.textContent='⚠️ '+fbError;el.style.color='#dc2626';el.style.fontSize='11px'}
     updateCloudStatus('offline','Mode local');
     const local=storage.get(K);
-    if(local){try{D=JSON.parse(local)}catch(e){}}
+    if(local){try{D=JSON.parse(local);sanitizeUserRecords();storage.set(K,JSON.stringify(D));}catch(e){}}
     else{storage.set(K,JSON.stringify(D))}
     firstLoad=false;cloudSynced=true;
     return;
@@ -2219,21 +2323,8 @@ $('sideLogo').innerHTML=LOGO({height:52,dark:true});
   initFirebase();
 })();
 
-(function(){
-  const u=storage.sg('s');
-  if(u){
-    let attempts=0;
-    const check=setInterval(()=>{
-      attempts++;
-      if(D.users&&D.users.length){
-        const f=D.users.find(x=>!x._deleted&&x.u===u);
-        if(f){U=f;openApp();clearInterval(check)}
-        else if(attempts>15){storage.sd('s');clearInterval(check)}
-      }
-      if(attempts>50)clearInterval(check);
-    },100);
-  }
-})();
+storage.sd('s');
+
 </script>
 </body>
 </html>
