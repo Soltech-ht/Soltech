@@ -212,6 +212,65 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .pass-wrap input{padding-right:44px}
 .pass-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;font-size:15px;padding:6px 10px;border-radius:6px;line-height:1;color:var(--muted);transition:background .2s}
 .pass-toggle:hover{background:#f1f5f9;color:var(--ink)}
+
+/* ═══ THERMAL PRINTER ═══ */
+#thermalArea{display:none}
+.thermal-receipt{font-family:'Courier New',Courier,monospace;color:#000;background:#fff;line-height:1.25;margin:0 auto}
+.thermal-receipt.w58{width:54mm;font-size:10px;padding:2mm}
+.thermal-receipt.w80{width:76mm;font-size:11.5px;padding:3mm}
+.thermal-receipt .t-center{text-align:center}
+.thermal-receipt .t-right{text-align:right}
+.thermal-receipt .t-bold{font-weight:bold}
+.thermal-receipt .t-big{font-size:1.25em;font-weight:bold}
+.thermal-receipt .t-huge{font-size:1.6em;font-weight:bold;letter-spacing:1px}
+.thermal-receipt .t-line{border-top:1px dashed #000;margin:2mm 0}
+.thermal-receipt .t-solid{border-top:2px solid #000;margin:2mm 0}
+.thermal-receipt .t-double{border-top:3px double #000;margin:2mm 0}
+.thermal-receipt table{width:100%;border-collapse:collapse;font-family:inherit;font-size:inherit}
+.thermal-receipt td{padding:1px 0;font-size:inherit;border:none;vertical-align:top}
+.thermal-receipt th{font-size:inherit;font-weight:bold;text-align:left;padding:1mm 0;border-bottom:1px solid #000;text-transform:none;letter-spacing:0}
+.thermal-receipt .t-logo{max-width:40mm;margin:0 auto 2mm;display:block;filter:grayscale(1)}
+.thermal-receipt .t-qr{width:28mm;height:28mm;margin:2mm auto;display:block}
+.thermal-receipt .t-mono{font-family:'Courier New',monospace}
+
+/* ═══ POS / CAISSE ═══ */
+.pos-wrap{display:grid;grid-template-columns:1fr 380px;gap:14px;height:calc(100vh - 180px);min-height:520px}
+.pos-products{display:flex;flex-direction:column;overflow:hidden}
+.pos-search{position:relative;margin-bottom:10px}
+.pos-search input{padding-left:36px;font-size:15px;padding-top:12px;padding-bottom:12px}
+.pos-search .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--muted)}
+.pos-cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;overflow-x:auto;padding-bottom:4px}
+.pos-cat{white-space:nowrap;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;transition:all .2s;color:var(--ink-2)}
+.pos-cat:hover{border-color:var(--o)}
+.pos-cat.active{background:var(--o);color:#fff;border-color:var(--o)}
+.pos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;overflow-y:auto;padding:2px;flex:1}
+.pos-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;transition:all .2s;text-align:left;font-family:inherit;color:inherit}
+.pos-card:hover{border-color:var(--o);box-shadow:0 4px 12px rgba(198,91,32,.15);transform:translateY(-2px)}
+.pos-card .pc-name{font-weight:700;font-size:13px;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pos-card .pc-code{font-size:10px;color:var(--muted);font-family:monospace;margin-bottom:6px}
+.pos-card .pc-price{font-weight:800;color:var(--o);font-size:15px}
+.pos-card .pc-stock{font-size:10px;color:var(--muted);margin-top:3px}
+.pos-card.out{opacity:.4;cursor:not-allowed}
+.pos-cart{background:#fff;border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--sh)}
+.pos-cart-head{padding:14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.pos-cart-head h3{margin:0;font-size:15px}
+.pos-cart-body{flex:1;overflow-y:auto;padding:8px}
+.pos-item{display:grid;grid-template-columns:1fr 60px 70px 28px;gap:6px;align-items:center;padding:8px;border-bottom:1px solid var(--line)}
+.pos-item .pi-name{font-size:12px;font-weight:600;line-height:1.2}
+.pos-item .pi-price{font-size:10.5px;color:var(--muted);margin-top:2px}
+.pos-item input{padding:5px 6px;font-size:12px;text-align:center}
+.pos-item .pi-total{font-size:12px;font-weight:700;text-align:right;color:var(--o)}
+.pos-item .pi-del{background:none;border:0;cursor:pointer;color:var(--muted);font-size:16px;padding:2px 4px;border-radius:4px}
+.pos-item .pi-del:hover{background:#fef2f2;color:var(--err)}
+.pos-cart-foot{padding:12px;border-top:2px solid var(--ink);background:#f8fafc}
+.pos-total-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;color:var(--ink-2)}
+.pos-total-row.big{font-size:20px;font-weight:800;color:var(--o);border-top:2px solid var(--ink);margin-top:6px;padding-top:8px}
+.pos-cart-actions{display:flex;gap:6px;margin-top:10px}
+.pos-cart-actions .btn{flex:1}
+.pos-empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.pos-empty .ico{font-size:48px;margin-bottom:10px}
+@media(max-width:1024px){.pos-wrap{grid-template-columns:1fr;height:auto}.pos-cart{max-height:60vh}}
+
 @media(max-width:1024px){.cards{grid-template-columns:repeat(2,1fr)}.cats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:820px){
 .grid,.form,.form.three{grid-template-columns:1fr}
@@ -229,6 +288,11 @@ html,body{background:#fff;margin:0;padding:0;width:8.5in;font-size:13px}
 .main{margin:0;padding:0;width:100%}
 .page{display:none!important}
 #printArea{display:block!important}
+body:has(#thermalArea:not(:empty)) #printArea{display:none!important}
+body:has(#thermalArea:not(:empty)) #thermalArea{display:block!important;width:100%;padding:0;margin:0}
+body:has(#thermalArea:not(:empty)) .side,
+body:has(#thermalArea:not(:empty)) .top,
+body:has(#thermalArea:not(:empty)) .main>*:not(#thermalArea){display:none!important}
 #printArea .doc{max-width:none;width:100%;border:0;border-radius:0;box-shadow:none;margin:0;padding:0.4in 0.35in;font-size:12px;line-height:1.4;box-sizing:border-box}
 #printArea .doc-header{padding-bottom:12px;margin-bottom:16px}
 #printArea .doc-title{font-size:28px}
@@ -302,6 +366,7 @@ html,body{background:#fff;margin:0;padding:0;width:8.5in;font-size:13px}
       <div class="nav-group" data-group="ventes">
         <button class="nav-group-toggle" onclick="toggleGroup(this)">💰 Ventes <span class="chev">▼</span></button>
         <div class="nav-group-items">
+          <button data-page="pos" onclick="page('pos',this)">🛒 Caisse (POS)</button>
           <button data-page="proformas" onclick="page('proformas',this)">Proformats</button>
           <button data-page="invoices" onclick="page('invoices',this)">Factures</button>
           <button data-page="payments" onclick="page('payments',this)">Paiements</button>
@@ -358,6 +423,35 @@ html,body{background:#fff;margin:0;padding:0;width:8.5in;font-size:13px}
         <div class="panel-head"><h3>📄 Proformats en attente</h3><button class="btn l s" onclick="page('proformas',document.querySelector('[data-page=proformas]'))">Tout voir</button></div>
         <div id="recentProformas"></div>
         <p class="muted" style="margin-top:10px;font-style:italic">ℹ️ Les proformats ne sont pas comptés dans les ventes.</p>
+      </div>
+    </section>
+
+    <section id="pos" class="page">
+      <div class="pos-wrap">
+        <div class="pos-products">
+          <div class="pos-search">
+            <span class="search-icon">🔍</span>
+            <input id="posSearch" placeholder="Rechercher un produit (nom ou code)…" oninput="renderPosGrid()" autocomplete="off">
+          </div>
+          <div class="pos-cats" id="posCats"></div>
+          <div class="pos-grid" id="posGrid"></div>
+        </div>
+        <div class="pos-cart">
+          <div class="pos-cart-head">
+            <h3>🛒 Panye</h3>
+            <button class="btn l s" onclick="clearPosCart()">Vider</button>
+          </div>
+          <div class="pos-cart-body" id="posCartBody"></div>
+          <div class="pos-cart-foot">
+            <div class="pos-total-row"><span>Sous-total</span><span id="posSubtotal">$0.00</span></div>
+            <div class="pos-total-row"><span>Rabais</span><span id="posDiscount">-$0.00</span></div>
+            <div class="pos-total-row big"><span>TOTAL</span><span id="posTotal">$0.00</span></div>
+            <div class="pos-cart-actions">
+              <button class="btn l" onclick="openPosOptions()">⚙️</button>
+              <button class="btn p" style="flex:3" onclick="openPosPayment()">💵 Peman</button>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -467,7 +561,7 @@ html,body{background:#fff;margin:0;padding:0;width:8.5in;font-size:13px}
 
     <section id="users" class="page">
       <div class="panel">
-        <div class="panel-head"><h3>Utilisateurs du système</h3><button class="btn p" onclick="userForm()">+ Ajouter un utilisateur</button></div>
+        <div class="panel-head"><h3>Utilisateurs du système</h3><div style="display:flex;gap:6px"><button class="btn l s" onclick="cleanupDuplicateUsers()" title="Efase doublon yo">🧹 Netwaye doublon</button><button class="btn p" onclick="userForm()">+ Ajouter un utilisateur</button></div></div>
         <div class="table-wrap"><table><thead><tr><th>Username</th><th>Nom</th><th>Rôle</th><th>Créé</th><th></th></tr></thead><tbody id="utb"></tbody></table></div>
       </div>
       <div class="panel">
@@ -496,6 +590,7 @@ html,body{background:#fff;margin:0;padding:0;width:8.5in;font-size:13px}
           <div class="card"><span class="lbl">Ventes nettes</span><div id="rnet" class="num">$0</div></div>
           <div class="card info"><span class="lbl">🏷️ Total rabais</span><div id="rdisc" class="num">$0</div></div>
         </div>
+        <div id="advReports" style="margin-top:20px"></div>
         <div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Vendeur</th><th class="num">Factures</th><th class="num">Ventes</th><th class="num">Payé</th><th class="num">Solde</th></tr></thead><tbody id="rtb"></tbody></table></div>
       </div>
     </section>
@@ -524,6 +619,7 @@ html,body{background:#fff;margin:0;padding:0;width:8.5in;font-size:13px}
 
 <div id="modal" class="modal"><div id="mb" class="modalbox"></div></div>
 <div id="pickerModal" class="modal" style="z-index:1100"><div id="pickerMb" class="modalbox"></div></div>
+<div id="thermalArea"></div>
 
 <script>
 'use strict';
@@ -539,9 +635,9 @@ const FIREBASE_CONFIG = {
 };
 
 const PERMISSIONS={
-  ADMIN:{pages:['dash','clients','products','cats','proformas','invoices','payments','refunds','discounts','repairs','requests','users','reports','history','sync'],canCreate:['clients','products','cats','proformas','invoices','payments','refunds','discounts','repairs','users'],canEdit:['clients','products','cats','proformas','invoices','payments','refunds','discounts','repairs','users'],canDelete:['clients','products','cats','proformas','invoices','payments','refunds','repairs','users'],canApprove:true},
-  VENDEUR:{pages:['dash','clients','products','cats','proformas','invoices','refunds','discounts','repairs'],canCreate:['clients','proformas','invoices','refunds','discounts'],canEdit:['clients','proformas','invoices'],canDelete:[],canApprove:false},
-  CAISSIER:{pages:['dash','invoices','payments','refunds'],canCreate:['payments','refunds'],canEdit:['payments'],canDelete:[],canApprove:false},
+  ADMIN:{pages:['dash','pos','clients','products','cats','proformas','invoices','payments','refunds','discounts','repairs','requests','users','reports','history','sync'],canCreate:['clients','products','cats','proformas','invoices','payments','refunds','discounts','repairs','users'],canEdit:['clients','products','cats','proformas','invoices','payments','refunds','discounts','repairs','users'],canDelete:['clients','products','cats','proformas','invoices','payments','refunds','repairs','users'],canApprove:true},
+  VENDEUR:{pages:['dash','pos','clients','products','cats','proformas','invoices','refunds','discounts','repairs'],canCreate:['clients','proformas','invoices','refunds','discounts'],canEdit:['clients','proformas','invoices'],canDelete:[],canApprove:false},
+  CAISSIER:{pages:['dash','pos','invoices','payments','refunds'],canCreate:['payments','refunds','invoices'],canEdit:['payments'],canDelete:[],canApprove:false},
   TECHNICIEN:{pages:['dash','clients','products','repairs'],canCreate:['repairs'],canEdit:['repairs'],canDelete:[],canApprove:false}
 };
 
@@ -620,7 +716,7 @@ const LOGO=(opts={})=>{
 
 function defaultData(){
   return {
-    _lastUpdate:now(),_version:10,rate:133,
+    _lastUpdate:now(),_version:11,rate:133,
     company:{
       name:'SOLTECH',tagline:'Solution Technique en Energie',
       address:'Delmas 101, Pétion-Ville',country:'Haïti',
@@ -630,7 +726,7 @@ function defaultData(){
       extraMessage:'Votre satisfaction est notre priorité. Pour toute question, contactez-nous.'
     },
     cats:['Panneaux solaires','Batteries','Onduleurs / Inverters','Contrôleurs / Régulateurs','Câbles & accessoires','Matériel électrique','Éclairage LED','Pompes solaires','Supports & fixation','Installation & services','Autre'],
-    users:[{id:uid(),_updatedAt:now(),u:'admin',name:'Administrateur',role:'ADMIN',created:now(),authLinked:false}],
+    users:[],
     clients:[],products:[],proformas:[],invoices:[],payments:[],refunds:[],repairs:[],requests:[],history:[]
   };
 }
@@ -693,7 +789,7 @@ function smartMerge(local,remote){
   const hist=[...(remote?.history||[]),...(local?.history||[])];
   const seen=new Set();
   merged.history=hist.filter(h=>{const k=[h?.t,h?.u,h?.a,h?.d].join('|');if(seen.has(k))return false;seen.add(k);return true}).slice(-500);
-  merged._version=10;
+  merged._version=11;
   merged._lastUpdate=now();
   return merged;
 }
@@ -772,7 +868,6 @@ async function loadAuthenticatedSession(user){
     if(profile.active!==true)throw new Error('Ce compte SOLTECH est désactivé. Contactez l’administrateur.');
     const role=String(profile.role||'').toUpperCase();
     if(!PERMISSIONS[role])throw new Error('Rôle SOLTECH invalide dans userProfiles.');
-    // Charger les données seulement après la validation du profil.
     const stateSnap=await db.collection('state').doc('current').get();
     if(stateSnap.exists&&stateSnap.data()&&stateSnap.data().data){
       D=smartMerge(D,stateSnap.data().data);
@@ -859,10 +954,10 @@ async function saveCloud(silent){
   const write=async()=>{try{
     updateCloudStatus('syncing','Envoi…');
     if(snapshot.history&&snapshot.history.length>500)snapshot.history=snapshot.history.slice(-500);
-    const payload=JSON.stringify({data:snapshot,meta:{updatedAt:now(),updatedBy:U?(U.email||U.u):auth.currentUser.email,version:10}});
+    const payload=JSON.stringify({data:snapshot,meta:{updatedAt:now(),updatedBy:U?(U.email||U.u):auth.currentUser.email,version:11}});
     const sizeKB=(payload.length/1024).toFixed(1);
     if(sizeKB>900)throw new Error('Données trop volumineuses');
-    await db.collection('state').doc('current').set({data:snapshot,meta:{updatedAt:now(),updatedBy:U?(U.email||U.u):auth.currentUser.email,version:10}});
+    await db.collection('state').doc('current').set({data:snapshot,meta:{updatedAt:now(),updatedBy:U?(U.email||U.u):auth.currentUser.email,version:11}});
     syncState.lastSync=new Date();syncState.status='online';
     updateCloudStatus('online','Synchronisé');
     if(!silent)toast('☁️ Enregistré ('+sizeKB+' Ko)','success');
@@ -1014,8 +1109,8 @@ function applyPermissions(){
   });
 }
 
-const pageTitles={dash:'Tableau de bord',clients:'Clients',products:'Produits & Stock',cats:'Catégories',proformas:'Proformats',invoices:'Factures',payments:'Paiements',refunds:'Remboursements',discounts:'Rabais',repairs:'Réparations',requests:'Demandes',users:'Utilisateurs',reports:'Rapports',history:'Historique',sync:'Cloud'};
-const groupOf={clients:'gestion',products:'gestion',cats:'gestion',proformas:'ventes',invoices:'ventes',payments:'ventes',refunds:'ventes',discounts:'ventes',repairs:'tech',users:'admin',reports:'admin',history:'admin',requests:'admin',sync:'admin'};
+const pageTitles={dash:'Tableau de bord',pos:'Caisse — Vant rapid',clients:'Clients',products:'Produits & Stock',cats:'Catégories',proformas:'Proformats',invoices:'Factures',payments:'Paiements',refunds:'Remboursements',discounts:'Rabais',repairs:'Réparations',requests:'Demandes',users:'Utilisateurs',reports:'Rapports',history:'Historique',sync:'Cloud'};
+const groupOf={pos:'ventes',clients:'gestion',products:'gestion',cats:'gestion',proformas:'ventes',invoices:'ventes',payments:'ventes',refunds:'ventes',discounts:'ventes',repairs:'tech',users:'admin',reports:'admin',history:'admin',requests:'admin',sync:'admin'};
 function toggleGroup(b){const g=b.parentElement;const o=g.classList.contains('open');$$('.nav-group.open').forEach(x=>x.classList.remove('open'));if(!o)g.classList.add('open')}
 function openGroupFor(p){const g=groupOf[p];$$('.nav-group').forEach(x=>x.classList.remove('open'));if(g){const grp=document.querySelector(`.nav-group[data-group="${g}"]`);if(grp)grp.classList.add('open')}}
 function page(id,b){
@@ -1027,7 +1122,8 @@ function page(id,b){
   else{const bt=document.querySelector(`.nav button[data-page="${id}"]`);if(bt)bt.classList.add('active')}
   openGroupFor(id);
   $('title').textContent=pageTitles[id]||'SOLTECH';
-  if(id==='reports')renderReports();
+  if(id==='pos')renderPos();
+  if(id==='reports'){renderReports();renderAdvancedReports();}
   if(id==='history')renderHistory();
   if(id==='requests')renderRequests();
   if(window.innerWidth<820)$('sidebar').classList.remove('open');
@@ -1054,8 +1150,9 @@ function render(){
   try{
     renderDash();renderClients();renderProducts();renderCats();
     renderProformas();renderInvoices();renderPayments();renderRefunds();renderDiscounts();renderRepairs();
-    renderUsers();renderReports();renderHistory();renderRequests();
+    renderUsers();renderReports();renderAdvancedReports();renderHistory();renderRequests();
     updateRequestsBadge();
+    if($('pos')?.classList.contains('active'))renderPos();
   }catch(e){console.error('Render:',e)}
 }
 function statusBadge(s){
@@ -1354,7 +1451,7 @@ function renderProformas(){
     <td class="row-actions">
       ${p.status!=='CONVERTED'&&can('create','invoices')?`<button class="conv" onclick="convertProforma('${p.id}')">📄</button>`:''}
       <button class="share" onclick="shareDoc('PROFORMAT','${p.id}','proformas')">📤</button>
-      <button onclick="printDoc('PROFORMAT','${p.id}','proformas')">🖨️</button>
+      <button onclick="openPrintOptions('PROFORMAT','${p.id}','proformas')">🖨️</button>
       ${can('edit','proformas')?`<button class="edit" onclick="editProforma('${p.id}')">✏️</button>`:`<button class="locked">🔒</button>`}
       ${can('delete','proformas')?`<button class="del" onclick="deleteProforma('${p.id}')">🗑️</button>`:`<button class="locked" onclick="requestDelete('proformas','${p.id}','${esc(p.no)}')">🔒</button>`}
     </td></tr>`).join('')||'<tr><td colspan="8" class="muted" style="text-align:center;padding:24px">Aucun proformat.</td></tr>';
@@ -1446,7 +1543,7 @@ function renderInvoices(){
     const refundBtn=can('create','refunds')?`<button class="refund" onclick="newRefund('${i.id}')" title="Remboursement">↩️</button>`:'';
     const editBtn=can('edit','invoices')?`<button class="edit" onclick="editInvoice('${i.id}')" title="Modifier">✏️</button>`:'';
     const delBtn=can('delete','invoices')?`<button class="del" onclick="deleteInvoice('${i.id}')">🗑️</button>`:`<button class="locked" onclick="requestDelete('invoices','${i.id}','${esc(i.no)}')">🔒</button>`;
-    return `<tr><td><b>${esc(i.no)}</b></td><td>${fmtDate(i.date)}</td><td>${esc(i.client)}</td><td>${esc(i.vendor)}</td><td class="num">${money(i.total)}</td><td class="num"><b style="color:var(--ok)">${money(i.paid)}</b></td><td class="num">${bal>0?`<b style="color:var(--err)">${money(bal)}</b>`:money(0)}</td><td>${statusBadge(i.status)}</td><td class="row-actions">${editBtn}${payBtn}${refundBtn}<button class="share" onclick="shareDoc('FACTURE','${i.id}','invoices')">📤</button><button onclick="printDoc('FACTURE','${i.id}','invoices')">🖨️</button>${delBtn}</td></tr>`;
+    return `<tr><td><b>${esc(i.no)}</b></td><td>${fmtDate(i.date)}</td><td>${esc(i.client)}</td><td>${esc(i.vendor)}</td><td class="num">${money(i.total)}</td><td class="num"><b style="color:var(--ok)">${money(i.paid)}</b></td><td class="num">${bal>0?`<b style="color:var(--err)">${money(bal)}</b>`:money(0)}</td><td>${statusBadge(i.status)}</td><td class="row-actions">${editBtn}${payBtn}${refundBtn}<button class="share" onclick="shareDoc('FACTURE','${i.id}','invoices')">📤</button><button onclick="openPrintOptions('FACTURE','${i.id}','invoices')">🖨️</button>${delBtn}</td></tr>`;
   }).join('')||'<tr><td colspan="9" class="muted" style="text-align:center;padding:24px">Aucune facture.</td></tr>';
   const addBtn=document.querySelector('#invoices .panel-head .btn.p');
   if(addBtn)addBtn.style.display=can('create','invoices')?'inline-flex':'none';
@@ -1785,7 +1882,7 @@ function renderRepairs(){
   if(!$('rtb2'))return;
   const q=($('rq').value||'').toLowerCase(),st=$('rst').value;
   const list=active(D.repairs).filter(r=>(!st||r.status===st)&&((r.no+' '+r.client+' '+(r.deviceType||'')+' '+(r.brand||'')+' '+(r.motif||'')).toLowerCase().includes(q))).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  $('rtb2').innerHTML=list.map(r=>`<tr><td><b>${esc(r.no)}</b></td><td>${fmtDate(r.date)}</td><td>${esc(r.client)}</td><td>${esc(r.deviceType||'—')}${r.brand?'<br><span class="muted">'+esc(r.brand)+'</span>':''}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((r.motif||'').substring(0,40))}</td><td>${esc(r.technician||'—')}</td><td class="num">${money(r.total||0)}</td><td>${statusBadge(r.status)}</td><td class="row-actions">${(r.status==='TERMINE'||r.status==='LIVRE')&&r.total>0&&!r.invoiced&&can('create','invoices')?`<button class="conv" onclick="invoiceFromRepair('${r.id}')">📄</button>`:''}<button class="share" onclick="shareDoc('REP','${r.id}','repairs')">📤</button><button onclick="printRepair('${r.id}')">🖨️</button>${can('edit','repairs')?`<button onclick="repairModal('${r.id}')">✏️</button>`:`<button class="locked">🔒</button>`}${can('delete','repairs')?`<button class="del" onclick="deleteRepair('${r.id}')">🗑️</button>`:`<button class="locked" onclick="requestDelete('repairs','${r.id}','${esc(r.no)}')">🔒</button>`}</td></tr>`).join('')||'<tr><td colspan="9" class="muted" style="text-align:center;padding:24px">Aucune réparation.</td></tr>';
+  $('rtb2').innerHTML=list.map(r=>`<tr><td><b>${esc(r.no)}</b></td><td>${fmtDate(r.date)}</td><td>${esc(r.client)}</td><td>${esc(r.deviceType||'—')}${r.brand?'<br><span class="muted">'+esc(r.brand)+'</span>':''}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((r.motif||'').substring(0,40))}</td><td>${esc(r.technician||'—')}</td><td class="num">${money(r.total||0)}</td><td>${statusBadge(r.status)}</td><td class="row-actions">${(r.status==='TERMINE'||r.status==='LIVRE')&&r.total>0&&!r.invoiced&&can('create','invoices')?`<button class="conv" onclick="invoiceFromRepair('${r.id}')">📄</button>`:''}<button class="share" onclick="shareDoc('REP','${r.id}','repairs')">📤</button><button onclick="openPrintOptions('REP','${r.id}','repairs')">🖨️</button>${can('edit','repairs')?`<button onclick="repairModal('${r.id}')">✏️</button>`:`<button class="locked">🔒</button>`}${can('delete','repairs')?`<button class="del" onclick="deleteRepair('${r.id}')">🗑️</button>`:`<button class="locked" onclick="requestDelete('repairs','${r.id}','${esc(r.no)}')">🔒</button>`}</td></tr>`).join('')||'<tr><td colspan="9" class="muted" style="text-align:center;padding:24px">Aucune réparation.</td></tr>';
   const addBtn=document.querySelector('#repairs .panel-head .btn.p');
   if(addBtn)addBtn.style.display=can('create','repairs')?'inline-flex':'none';
 }
@@ -1851,7 +1948,6 @@ function deleteRepair(id){
   const r=D.repairs.find(x=>x.id===id);if(!r)return;
   guardDelete('repairs',id,r.no,()=>{r._deleted=true;r._updatedAt=now();log('Suppression réparation',r.no);toast('Supprimée','success');save()});
 }
-function printRepair(id){printDoc('REP',id,'repairs')}
 function invoiceFromRepair(id){
   if(!can('create','invoices'))return toast('Permission refusée','error');
   const r=D.repairs.find(x=>x.id===id);if(!r)return;
@@ -1998,7 +2094,7 @@ function renderReports(){
     return `<tr><td><b>${esc(v)}</b></td><td class="num">${z.length}</td><td class="num">${money(z.reduce((s,i)=>s+i.total,0))}</td><td class="num">${money(z.reduce((s,i)=>s+i.paid,0))}</td><td class="num">${money(z.reduce((s,i)=>s+(i.total-i.paid),0))}</td></tr>`;
   }).join('')||'<tr><td colspan="5" class="muted" style="text-align:center;padding:24px">Aucune donnée.</td></tr>';
 }
-function clearReportFilters(){if($('rf'))$('rf').value='';if($('rt'))$('rt').value='';if($('rv'))$('rv').value='';renderReports()}
+function clearReportFilters(){if($('rf'))$('rf').value='';if($('rt'))$('rt').value='';if($('rv'))$('rv').value='';renderReports();renderAdvancedReports()}
 function renderHistory(){
   if(!$('htb'))return;
   const list=(D.history||[]).slice().reverse().slice(0,500);
@@ -2204,7 +2300,7 @@ function printDoc(kind,id,collection){
     </div>
   </div>
   <div class="no-print" style="text-align:center;margin-top:24px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-    <button class="btn p" onclick="window.print()">🖨️ Imprimer / PDF</button>
+    <button class="btn p" onclick="openPrintOptions('${kind}','${obj.id}','${collection}')">🖨️ Enprime</button>
     <button class="btn wa" onclick="shareDoc('${kind}','${obj.id}','${collection}')">📤 Partager PDF</button>
     ${kind==='PROFORMAT'&&obj.status!=='CONVERTED'&&can('create','invoices')?`<button class="btn b" onclick="convertProforma('${obj.id}')">📄 Convertir en facture</button>`:''}
     ${kind==='FACTURE'&&bal>0&&can('create','payments')?`<button class="btn g" onclick="quickPay('${obj.id}')">💰 Encaisser</button>`:''}
@@ -2270,7 +2366,7 @@ function renderRepairDoc(r){
     </div>
   </div>
   <div class="no-print" style="text-align:center;margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-    <button class="btn p" onclick="window.print()">🖨️ Imprimer / PDF</button>
+    <button class="btn p" onclick="openPrintOptions('REP','${r.id}','repairs')">🖨️ Enprime</button>
     <button class="btn wa" onclick="shareDoc('REP','${r.id}','repairs')">📤 Partager PDF</button>
     ${(r.status==='TERMINE'||r.status==='LIVRE')&&r.total>0&&!r.invoiced&&can('create','invoices')?`<button class="btn b" onclick="invoiceFromRepair('${r.id}')">📄 Créer facture</button>`:''}
     <button class="btn l" onclick="backFromPrint()">← Retour</button>
@@ -2286,9 +2382,449 @@ function getLastPayment(invoiceNo){
 }
 function backFromPrint(){$('printArea').style.display='none';page('invoices',document.querySelector('.nav button[data-page="invoices"]'))}
 
+/* ═══════════════════════════════════════════════════════════════
+   OPSYON ENPRIME — PDF / TIKÈ 58mm / TIKÈ 80mm
+   ═══════════════════════════════════════════════════════════════ */
+function openPrintOptions(kind, id, col){
+  const obj = active(D[col]).find(x => x.id === id);
+  if(!obj) return toast('Document introuvable','error');
+  const labels = {FACTURE:'Facture', PROFORMAT:'Proformat', REP:'Fiche réparation'};
+  modal(`<h2>🖨️ Enprime ${labels[kind]||''} ${esc(obj.no)}</h2>
+    <p class="muted" style="margin:10px 0 16px">Chwazi fòma a:</p>
+    <div style="display:grid;gap:10px">
+      <button class="share-btn secondary" onclick="doPrint('${kind}','${id}','${col}','pdf')" style="padding:22px;flex-direction:row;justify-content:flex-start;text-align:left">
+        <span class="ico" style="font-size:32px">📄</span>
+        <span><b style="font-size:14px;display:block">PDF Standard (Lèt)</b><span style="font-size:11.5px;color:var(--muted);font-weight:400">Pou enprime oswa voye pa email</span></span>
+      </button>
+      <button class="share-btn secondary" onclick="doPrint('${kind}','${id}','${col}','t58')" style="padding:22px;flex-direction:row;justify-content:flex-start;text-align:left">
+        <span class="ico" style="font-size:32px">🧾</span>
+        <span><b style="font-size:14px;display:block">Tikè Tèrmik 58mm</b><span style="font-size:11.5px;color:var(--muted);font-weight:400">Ti enprimant pòtab (POS)</span></span>
+      </button>
+      <button class="share-btn secondary" onclick="doPrint('${kind}','${id}','${col}','t80')" style="padding:22px;flex-direction:row;justify-content:flex-start;text-align:left">
+        <span class="ico" style="font-size:32px">🖨️</span>
+        <span><b style="font-size:14px;display:block">Tikè Tèrmik 80mm</b><span style="font-size:11.5px;color:var(--muted);font-weight:400">Pi gwo tèrmik (kès magazen)</span></span>
+      </button>
+      <button class="btn l" onclick="closeModal()" style="margin-top:6px">Anile</button>
+    </div>`);
+}
+
+function doPrint(kind, id, col, format){
+  closeModal();
+  if(format === 'pdf'){
+    printDoc(kind, id, col);
+    setTimeout(()=>window.print(), 400);
+  } else if(format === 't58'){
+    printThermal(kind, id, col, 58);
+  } else if(format === 't80'){
+    printThermal(kind, id, col, 80);
+  }
+}
+
+function setPageSize(size){
+  let st = document.getElementById('dynPageSize');
+  if(!st){ st = document.createElement('style'); st.id='dynPageSize'; document.head.appendChild(st); }
+  st.textContent = '@page { size: ' + size + '; margin: 0; }';
+}
+
+function printThermal(kind, id, col, width){
+  const obj = active(D[col]).find(x => x.id === id);
+  if(!obj) return toast('Document introuvable','error');
+  const html = buildThermalHTML(kind, obj, width);
+  $('thermalArea').innerHTML = html;
+  setPageSize(width + 'mm auto');
+  toast('🖨️ Tikè ' + width + 'mm — Chwazi enprimant tèrmik la','info');
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => {
+      setPageSize('8.5in 11in');
+      $('thermalArea').innerHTML = '';
+    }, 1500);
+  }, 300);
+}
+
+function buildThermalHTML(kind, obj, width){
+  const C = D.company;
+  const cls = width === 58 ? 'w58' : 'w80';
+  const line = '<div class="t-line"></div>';
+  const solid = '<div class="t-solid"></div>';
+  const dbl = '<div class="t-double"></div>';
+
+  if(kind === 'REP'){
+    const parts = (obj.parts||[]).map(p =>
+      `<tr><td>${esc(p.name)}</td><td class="t-right">${p.qty}×${money(p.price)}</td></tr>`
+    ).join('');
+    return `<div class="thermal-receipt ${cls}">
+      <div class="t-center t-huge">SOLTECH</div>
+      <div class="t-center" style="font-size:.85em">Solution Technique en Energie</div>
+      <div class="t-center" style="font-size:.75em">${esc(C.phones)}</div>
+      ${dbl}
+      <div class="t-center t-bold">FICHE RÉPARATION</div>
+      <div class="t-center t-mono">${esc(obj.no)}</div>
+      ${line}
+      <table>
+        <tr><td>Dat:</td><td class="t-right">${fmtDate(obj.date)}</td></tr>
+        <tr><td>Kliyan:</td><td class="t-right">${esc(obj.client)}</td></tr>
+        ${obj.clientPhone?`<tr><td>Tel:</td><td class="t-right">${esc(obj.clientPhone)}</td></tr>`:''}
+      </table>
+      ${line}
+      <table>
+        <tr><td>Aparèy:</td><td class="t-right">${esc(obj.deviceType||'—')}</td></tr>
+        ${obj.brand?`<tr><td>Mak:</td><td class="t-right">${esc(obj.brand)}</td></tr>`:''}
+        ${obj.model?`<tr><td>Modèl:</td><td class="t-right">${esc(obj.model)}</td></tr>`:''}
+        ${obj.serial?`<tr><td>Seri:</td><td class="t-right">${esc(obj.serial)}</td></tr>`:''}
+      </table>
+      ${line}
+      <div class="t-bold" style="margin-bottom:1mm">MOTIF:</div>
+      <div style="font-size:.9em;margin-bottom:2mm">${esc(obj.motif||'—')}</div>
+      ${obj.diagnosis?`<div class="t-bold">DYAGNOSTIK:</div><div style="font-size:.9em;margin-bottom:2mm">${esc(obj.diagnosis)}</div>`:''}
+      ${obj.solution?`<div class="t-bold">SOLISYON:</div><div style="font-size:.9em;margin-bottom:2mm">${esc(obj.solution)}</div>`:''}
+      ${parts?`${line}<table>${parts}</table>`:''}
+      ${solid}
+      <table>
+        <tr><td>Pyès:</td><td class="t-right">${money(obj.partsCost||0)}</td></tr>
+        <tr><td>Men dèv:</td><td class="t-right">${money(obj.laborCost||0)}</td></tr>
+        <tr><td class="t-big">TOTAL:</td><td class="t-right t-big">${money(obj.total)}</td></tr>
+        <tr><td colspan="2" class="t-right" style="font-size:.75em">${htg(obj.total, D.rate)}</td></tr>
+      </table>
+      ${line}
+      <div class="t-center" style="font-size:.8em">Teknisyen: ${esc(obj.technician||'—')}</div>
+      ${line}
+      <div class="t-center t-bold">Mèsi konfyans ou!</div>
+      <div class="t-center" style="font-size:.75em">${esc(C.email)}</div>
+      ${line}
+      <div class="t-center" style="font-size:.7em">${new Date().toLocaleString('fr-FR')}</div>
+    </div>`;
+  }
+
+  const items = obj.items||[];
+  const itemRows = items.map(x =>
+    `<tr><td colspan="3" style="padding-top:1mm">${esc(x.name)}</td></tr>
+     <tr><td style="padding-left:2mm;font-size:.9em">${x.qty} × ${money(x.price)}</td><td colspan="2" class="t-right t-bold">${money(x.total)}</td></tr>`
+  ).join('');
+  const isFacture = kind === 'FACTURE';
+  const title = isFacture ? 'FACTURE' : 'PROFORMAT';
+
+  return `<div class="thermal-receipt ${cls}">
+    <div class="t-center t-huge">SOLTECH</div>
+    <div class="t-center" style="font-size:.85em">Solution Technique en Energie</div>
+    <div class="t-center" style="font-size:.75em">${esc(C.address)}, ${esc(C.country)}</div>
+    <div class="t-center" style="font-size:.75em">Tel: ${esc(C.phones)}</div>
+    ${dbl}
+    <div class="t-center t-bold t-big">${title}</div>
+    <div class="t-center t-mono">${esc(obj.no)}</div>
+    ${line}
+    <table>
+      <tr><td>Dat:</td><td class="t-right">${fmtDate(obj.date)}</td></tr>
+      <tr><td>Kliyan:</td><td class="t-right">${esc(obj.client)}</td></tr>
+      ${obj.clientPhone?`<tr><td>Tel:</td><td class="t-right">${esc(obj.clientPhone)}</td></tr>`:''}
+      <tr><td>Vandè:</td><td class="t-right">${esc(obj.vendor)}</td></tr>
+    </table>
+    ${line}
+    <table>
+      <thead><tr><th>Atik</th><th class="t-right">Total</th></tr></thead>
+      <tbody>${itemRows}</tbody>
+    </table>
+    ${solid}
+    <table>
+      <tr><td>Sous-total:</td><td class="t-right">${money(obj.subtotal)}</td></tr>
+      ${obj.discount>0?`<tr><td>Rabè:</td><td class="t-right">-${money(obj.discount)}</td></tr>`:''}
+      ${obj.taxRate>0?`<tr><td>Tax (${obj.taxRate}%):</td><td class="t-right">${money(obj.taxAmount)}</td></tr>`:''}
+      <tr><td class="t-big">TOTAL:</td><td class="t-right t-big">${money(obj.total)}</td></tr>
+      <tr><td colspan="2" class="t-right" style="font-size:.75em">${htg(obj.total, obj.rate||D.rate)}</td></tr>
+    </table>
+    ${isFacture ? `
+      ${line}
+      <table>
+        <tr><td>Peye:</td><td class="t-right">${money(obj.paid)}</td></tr>
+        <tr><td class="t-bold">RÈS:</td><td class="t-right t-bold">${money(obj.total-obj.paid)}</td></tr>
+      </table>
+    ` : ''}
+    ${line}
+    <div class="t-center" style="font-size:.8em">Mèsi konfyans ou!</div>
+    <div class="t-center" style="font-size:.75em">${esc(C.email)}</div>
+    ${line}
+    <div class="t-center" style="font-size:.7em">${new Date().toLocaleString('fr-FR')}</div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MÒD POS / CAISSE — Vant Rapid
+   ═══════════════════════════════════════════════════════════════ */
+let posCart = [];
+let posActiveCat = '';
+let posClient = null;
+let posGlobalDiscount = 0;
+
+function renderPos(){
+  if(!$('posGrid')) return;
+  const cats = [...new Set(activeProducts().map(p => p.cat))];
+  $('posCats').innerHTML = `<button class="pos-cat ${!posActiveCat?'active':''}" onclick="setPosCat('')">Tout</button>` +
+    cats.map(c => `<button class="pos-cat ${posActiveCat===c?'active':''}" onclick="setPosCat('${esc(c).replace(/'/g,"\\'")}')">${esc(c)}</button>`).join('');
+  renderPosGrid();
+  renderPosCart();
+}
+function setPosCat(c){ posActiveCat = c; renderPos(); }
+function renderPosGrid(){
+  if(!$('posGrid')) return;
+  const q = ($('posSearch')?.value||'').toLowerCase().trim();
+  const list = activeProducts().filter(p =>
+    (!posActiveCat || p.cat === posActiveCat) &&
+    (!q || (p.name+' '+p.code).toLowerCase().includes(q))
+  );
+  $('posGrid').innerHTML = list.map(p => {
+    const out = (+p.stock||0) <= 0;
+    return `<button class="pos-card ${out?'out':''}" onclick="addToPos('${p.id}')" ${out?'disabled':''}>
+      <div class="pc-name">${esc(p.name)}</div>
+      <div class="pc-code">${esc(p.code)}</div>
+      <div class="pc-price">${money(p.price)}</div>
+      <div class="pc-stock">Stock: ${p.stock}</div>
+    </button>`;
+  }).join('') || '<div class="pos-empty">Pa gen pwodwi</div>';
+}
+function addToPos(id){
+  const p = activeProducts().find(x => x.id === id); if(!p) return;
+  const existing = posCart.find(x => x.id === id);
+  if(existing){
+    if(existing.qty >= (+p.stock||0)) return toast('Pa gen ase stock','warn');
+    existing.qty++;
+  } else {
+    posCart.push({ id, code: p.code, name: p.name, price: p.price, qty: 1, stock: p.stock });
+  }
+  renderPosCart();
+}
+function updatePosQty(id, val){
+  const it = posCart.find(x => x.id === id); if(!it) return;
+  const n = parseInt(val) || 0;
+  if(n <= 0){ posCart = posCart.filter(x => x.id !== id); }
+  else { it.qty = Math.min(n, it.stock); }
+  renderPosCart();
+}
+function removePos(id){ posCart = posCart.filter(x => x.id !== id); renderPosCart(); }
+function clearPosCart(){ if(!posCart.length) return; if(!confirm('Vide panye a?')) return; posCart = []; posGlobalDiscount = 0; posClient = null; renderPosCart(); }
+function renderPosCart(){
+  if(!$('posCartBody')) return;
+  if(!posCart.length){
+    $('posCartBody').innerHTML = '<div class="pos-empty"><div class="ico">🛒</div><div>Panye vid</div><div style="font-size:11px;margin-top:4px">Klike sou yon pwodwi pou ajoute</div></div>';
+  } else {
+    $('posCartBody').innerHTML = posCart.map(it => `
+      <div class="pos-item">
+        <div>
+          <div class="pi-name">${esc(it.name)}</div>
+          <div class="pi-price">${money(it.price)} × </div>
+        </div>
+        <input type="number" min="1" value="${it.qty}" onchange="updatePosQty('${it.id}', this.value)">
+        <div class="pi-total">${money(it.price * it.qty)}</div>
+        <button class="pi-del" onclick="removePos('${it.id}')">✕</button>
+      </div>
+    `).join('');
+  }
+  const sub = posCart.reduce((s, it) => s + it.price * it.qty, 0);
+  const disc = posGlobalDiscount || 0;
+  const total = Math.max(0, sub - disc);
+  if($('posSubtotal'))$('posSubtotal').textContent = money(sub);
+  if($('posDiscount'))$('posDiscount').textContent = '-' + money(disc);
+  if($('posTotal'))$('posTotal').textContent = money(total);
+}
+function openPosOptions(){
+  modal(`<h2>⚙️ Opsyon panye</h2>
+    <label>Kliyan (opsyonèl)</label>
+    <select id="posClientSel">
+      <option value="">— Pa gen kliyan —</option>
+      ${activeClients().slice().sort((a,b)=>a.name.localeCompare(b.name)).map(c => `<option value="${c.id}">${esc(c.name)}${(c.discountRate||0)>0?' — '+c.discountRate+'%':''}</option>`).join('')}
+    </select>
+    <label>Rabè global (USD)</label>
+    <input id="posDiscInput" type="number" step="0.01" min="0" value="${posGlobalDiscount}">
+    <div class="actions">
+      <button class="btn p" onclick="savePosOptions()">✓ Aplike</button>
+      <button class="btn l" onclick="closeModal()">Anile</button>
+    </div>`);
+}
+function savePosOptions(){
+  const cid = $('posClientSel').value;
+  posClient = cid ? activeClients().find(c => c.id === cid) : null;
+  posGlobalDiscount = Math.max(0, parseFloat($('posDiscInput').value) || 0);
+  if(posClient && (posClient.discountRate||0) > 0 && posGlobalDiscount === 0){
+    const sub = posCart.reduce((s,it)=>s+it.price*it.qty,0);
+    posGlobalDiscount = Math.round(sub * (posClient.discountRate/100) * 100) / 100;
+  }
+  renderPosCart(); closeModal();
+  toast('OPSYON APLIKE', 'success');
+}
+function openPosPayment(){
+  if(!posCart.length) return toast('Panye vid','warn');
+  const sub = posCart.reduce((s,it)=>s+it.price*it.qty,0);
+  const total = Math.max(0, sub - posGlobalDiscount);
+  modal(`<h2>💵 Peman</h2>
+    <div style="background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span class="muted">Atik</span><b>${posCart.length}</b></div>
+      <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:2px solid var(--ink)"><span class="muted" style="font-weight:700">TOTAL</span><b style="color:var(--o);font-size:20px">${money(total)}</b></div>
+    </div>
+    <label>Montan resevwa (USD)</label>
+    <input id="posPaid" type="number" step="0.01" min="0" value="${total.toFixed(2)}" oninput="calcPosChange()">
+    <div style="background:#ecfdf5;padding:12px;border-radius:8px;margin-top:10px;text-align:center">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase">Chanj</div>
+      <div id="posChangeAmt" style="font-size:22px;font-weight:800;color:var(--ok)">$0.00</div>
+    </div>
+    <label>Metòd</label>
+    <select id="posMethod"><option>Cash</option><option>MonCash</option><option>NatCash</option><option>Carte</option><option>Virement</option></select>
+    <div class="actions">
+      <button class="btn p" style="flex:1;justify-content:center" onclick="completePosSale(false)">💵 Fini & Enprime</button>
+      <button class="btn g" style="flex:1;justify-content:center" onclick="completePosSale(true)">✓ Fini san enprime</button>
+    </div>`);
+  calcPosChange();
+  setTimeout(()=>{const el=$('posPaid'); if(el){el.focus(); el.select();}}, 150);
+}
+function calcPosChange(){
+  const sub = posCart.reduce((s,it)=>s+it.price*it.qty,0);
+  const total = Math.max(0, sub - posGlobalDiscount);
+  const paid = parseFloat($('posPaid').value) || 0;
+  const change = Math.max(0, paid - total);
+  const el = $('posChangeAmt'); if(el) el.textContent = money(change);
+}
+function completePosSale(skipPrint){
+  const sub = posCart.reduce((s,it)=>s+it.price*it.qty,0);
+  const total = Math.max(0, sub - posGlobalDiscount);
+  const paid = parseFloat($('posPaid').value) || 0;
+  if(paid < total - 0.005) return toast('Montan peye a pa ase','error');
+
+  for(const it of posCart){
+    const p = D.products.find(x => x.id === it.id);
+    if(!p || it.qty > (+p.stock||0)) return toast('Stock ensifizan pou '+it.name,'error');
+  }
+
+  let clientName = posClient ? posClient.name : 'Kliyan pasaje';
+  let cData = posClient;
+  if(!cData){
+    let pv = D.clients.find(c => c.name === 'Kliyan pasaje' && !c._deleted);
+    if(!pv){
+      pv = { id: uid(), _updatedAt: now(), name: 'Kliyan pasaje', phone:'', address:'', email:'', discountRate:0 };
+      D.clients.push(pv);
+    }
+    cData = pv;
+  }
+
+  const items = posCart.map(it => ({ code: it.code, name: it.name, cat: '', qty: it.qty, price: it.price, total: it.price * it.qty }));
+  const inv = {
+    id: uid(), _updatedAt: now(),
+    no: nextNo('INV', D.invoices),
+    date: today(), dueDate: today(),
+    client: cData.name, clientPhone: cData.phone||'', clientAddress: cData.address||'', clientEmail: cData.email||'',
+    vendor: U.name, user: U.u,
+    items, subtotal: sub,
+    discount: posGlobalDiscount, taxRate: 0, taxAmount: 0,
+    total, paid: total, status: 'PAID',
+    rate: D.rate, notes: 'Vant kès rapid'
+  };
+  D.invoices.push(inv);
+
+  posCart.forEach(it => {
+    const p = D.products.find(x => x.id === it.id);
+    if(p){ p.stock = Math.max(0, (+p.stock||0) - it.qty); p._updatedAt = now(); }
+  });
+
+  D.payments.push({
+    id: uid(), _updatedAt: now(),
+    date: today(), invoice: inv.no, client: cData.name,
+    amount: total, method: $('posMethod').value, user: U.u
+  });
+
+  log('Vant POS', inv.no + ' — ' + money(total));
+  save();
+  closeModal();
+
+  if(!skipPrint){
+    setTimeout(() => { openPrintOptions('FACTURE', inv.id, 'invoices'); }, 300);
+  } else {
+    toast('✓ Vant anrejistre: ' + inv.no, 'success');
+  }
+
+  posCart = []; posGlobalDiscount = 0; posClient = null;
+  renderPosCart();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NETWAYAJ DOUBLON ADMIN
+   ═══════════════════════════════════════════════════════════════ */
+function cleanupDuplicateUsers(){
+  if(U?.role !== 'ADMIN') return toast('ADMIN sèlman','error');
+  const grouped = new Map();
+  const toDelete = [];
+  D.users.forEach(u => {
+    if(!u || u._deleted) return;
+    const key = (u.u||'').toLowerCase() + '|' + (u.name||'').toLowerCase() + '|' + (u.role||'');
+    if(grouped.has(key)){
+      if(u.firebaseUid === auth?.currentUser?.uid) return;
+      toDelete.push(u);
+    } else {
+      grouped.set(key, u);
+    }
+  });
+  if(!toDelete.length) return toast('Pa gen doublon ✓','success');
+  if(!confirm('Efase ' + toDelete.length + ' doublon(s) ?\n\nAksyon sa a p ap ka anile.')) return;
+  toDelete.forEach(u => { u._deleted = true; u._updatedAt = now(); });
+  log('Netwayaj doublon', toDelete.length + ' users');
+  save();
+  toast('✓ ' + toDelete.length + ' doublon efase','success');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RAPÒ AVANSE
+   ═══════════════════════════════════════════════════════════════ */
+function renderAdvancedReports(){
+  const el = $('advReports'); if(!el) return;
+  const invs = active(D.invoices);
+  const prodSales = {};
+  invs.forEach(i => (i.items||[]).forEach(it => {
+    const k = it.code || it.name;
+    if(!prodSales[k]) prodSales[k] = { name: it.name, qty: 0, total: 0 };
+    prodSales[k].qty += Number(it.qty)||0;
+    prodSales[k].total += Number(it.total)||0;
+  }));
+  const top10 = Object.values(prodSales).sort((a,b) => b.total - a.total).slice(0,10);
+
+  const now_ = new Date();
+  const months = [];
+  for(let i = 5; i >= 0; i--){
+    const d = new Date(now_.getFullYear(), now_.getMonth() - i, 1);
+    months.push({ y: d.getFullYear(), m: d.getMonth(), label: d.toLocaleDateString('fr-FR',{month:'short',year:'2-digit'}), total: 0, count: 0 });
+  }
+  invs.forEach(i => {
+    if(!i.date) return;
+    const [y,m] = i.date.split('-').map(Number);
+    const mo = months.find(x => x.y===y && x.m===(m-1));
+    if(mo){ mo.total += i.total; mo.count++; }
+  });
+  const maxM = Math.max(...months.map(m => m.total), 1);
+
+  el.innerHTML = `
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-head"><h3>🏆 Top 10 Pwodwi</h3></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>#</th><th>Pwodwi</th><th class="num">Qté</th><th class="num">Total</th></tr></thead>
+          <tbody>${top10.map((p,i) => `<tr><td><b>${i+1}</b></td><td>${esc(p.name)}</td><td class="num">${p.qty}</td><td class="num"><b style="color:var(--o)">${money(p.total)}</b></td></tr>`).join('') || '<tr><td colspan="4" class="muted" style="text-align:center;padding:20px">Pa gen done</td></tr>'}</tbody>
+        </table></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>📈 Vant 6 Dènye Mwa</h3></div>
+        <div style="padding:10px 0">
+          ${months.map(m => `
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div style="width:60px;font-size:11px;color:var(--muted);font-weight:600">${m.label}</div>
+              <div style="flex:1;background:#f1f5f9;border-radius:6px;overflow:hidden;height:22px">
+                <div style="height:100%;background:linear-gradient(90deg,var(--o),var(--o-l));width:${(m.total/maxM*100).toFixed(1)}%;border-radius:6px;transition:width .5s"></div>
+              </div>
+              <div style="width:100px;text-align:right;font-size:11.5px;font-weight:700">${money(m.total)}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
 function backup(){
   try{
-    const b=new Blob([JSON.stringify({app:'SOLTECH',schemaVersion:10,exportedAt:now(),data:D},null,2)],{type:'application/json'});
+    const b=new Blob([JSON.stringify({app:'SOLTECH',schemaVersion:11,exportedAt:now(),data:D},null,2)],{type:'application/json'});
     const a=document.createElement('a');a.href=URL.createObjectURL(b);
     a.download='SOLTECH_backup_'+today()+'.json';
     document.body.appendChild(a);a.click();
