@@ -549,8 +549,9 @@ const storage={
 const esc=x=>String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const money=x=>'$'+Number(x||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const htg=(x,r)=>'HTG '+Number((x||0)*(r||1)).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-const today=()=>new Date().toISOString().slice(0,10);
-const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)};
+const localISODate=(date=new Date())=>{const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,'0'),d=String(date.getDate()).padStart(2,'0');return `${y}-${m}-${d}`};
+const today=()=>localISODate();
+const addDays=(d,n)=>{const x=new Date((/^\d{4}-\d{2}-\d{2}$/.test(String(d))?d+'T12:00:00':d));if(Number.isNaN(x.getTime()))return today();x.setDate(x.getDate()+Number(n||0));return localISODate(x)};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const fmtDate=d=>{if(!d)return '';const dt=new Date(d);if(isNaN(dt))return d;return dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})};
 const now=()=>new Date().toISOString();
@@ -605,7 +606,7 @@ const LOGO=(opts={})=>{
 
 function defaultData(){
   return {
-    _lastUpdate:now(),_version:9,rate:133,
+    _lastUpdate:now(),_version:10,rate:133,
     company:{
       name:'SOLTECH',tagline:'Solution Technique en Energie',
       address:'Delmas 101, Pétion-Ville',country:'Haïti',
@@ -648,7 +649,7 @@ function generateProductCode(catName){
 
 function smartMerge(local,remote){
   const merged={};
-  const ARRAYS=['users','clients','products','proformas','invoices','payments','refunds','repairs','requests'];
+  const ARRAYS=['users','clients','products','proformas','invoices','payments','refunds','repairs','requests','expenses'];
   ARRAYS.forEach(key=>{
     const localArr=Array.isArray(local?.[key])?local[key]:[];
     const remoteArr=Array.isArray(remote?.[key])?remote[key]:[];
@@ -671,13 +672,19 @@ function smartMerge(local,remote){
   merged.cats=[...new Set([...rc,...lc])];
   merged.rate=remote?.rate??local?.rate??133;
   merged.company=Object.assign(defaultData().company,remote?.company||{},local?.company||{});
-  merged._deletedCats=local?._deletedCats||remote?._deletedCats||[];
-  merged._version=9;
+  merged._deletedCats=[...new Set([...(remote?._deletedCats||[]),...(local?._deletedCats||[])])];
+  const hist=[...(remote?.history||[]),...(local?.history||[])];
+  const seen=new Set();
+  merged.history=hist.filter(h=>{const k=[h?.t,h?.u,h?.a,h?.d].join('|');if(seen.has(k))return false;seen.add(k);return true}).slice(-500);
+  merged._version=10;
   merged._lastUpdate=now();
   return merged;
 }
 function stampLocalItems(){
   const n=now();
+  ['users','clients','products','proformas','invoices','payments','refunds','repairs','requests','history','cats'].forEach(k=>{if(!Array.isArray(D[k]))D[k]=[]});
+  if(!D.company||typeof D.company!=='object')D.company=defaultData().company;
+  if(!Number.isFinite(Number(D.rate))||Number(D.rate)<=0)D.rate=133;
   ['users','clients','products','proformas','invoices','payments','refunds','repairs','requests'].forEach(k=>{
     if(Array.isArray(D[k]))D[k].forEach(item=>{
       if(item&&!item._updatedAt)item._updatedAt=item.created||n;
@@ -761,15 +768,17 @@ function save(){
   render();
   if(fbReady)saveCloud(true);
 }
+let cloudWriteQueue=Promise.resolve();
 async function saveCloud(silent){
   if(!fbReady)return false;
-  try{
+  const snapshot=JSON.parse(JSON.stringify(D));
+  const write=async()=>{try{
     updateCloudStatus('syncing','Envoi…');
-    if(D.history&&D.history.length>200)D.history=D.history.slice(-200);
-    const payload=JSON.stringify({data:D,meta:{updatedAt:now(),updatedBy:U?U.u:'anon',version:9}});
+    if(snapshot.history&&snapshot.history.length>500)snapshot.history=snapshot.history.slice(-500);
+    const payload=JSON.stringify({data:snapshot,meta:{updatedAt:now(),updatedBy:U?U.u:'anon',version:10}});
     const sizeKB=(payload.length/1024).toFixed(1);
     if(sizeKB>900)throw new Error('Données trop volumineuses');
-    await db.collection('state').doc('current').set({data:D,meta:{updatedAt:now(),updatedBy:U?U.u:'anon',version:9}});
+    await db.collection('state').doc('current').set({data:snapshot,meta:{updatedAt:now(),updatedBy:U?U.u:'anon',version:10}});
     syncState.lastSync=new Date();syncState.status='online';
     updateCloudStatus('online','Synchronisé');
     if(!silent)toast('☁️ Enregistré ('+sizeKB+' Ko)','success');
@@ -778,7 +787,10 @@ async function saveCloud(silent){
     updateCloudStatus('offline','Erreur: '+e.message);
     if(!silent)toast('Erreur cloud: '+e.message,'error');
     return false;
-  }
+  }};
+  const result=cloudWriteQueue.then(write,write);
+  cloudWriteQueue=result.then(()=>undefined,()=>undefined);
+  return result;
 }
 function forceSync(){saveCloud(false)}
 
@@ -1503,20 +1515,28 @@ function saveInvoice(id){
     const prodId=r.querySelector('.prod-id').value;
     const p=activeProducts().find(x=>x.id===prodId);
     if(!p)continue;
-    const q=Math.max(0,parseInt(r.querySelector('.qty').value,10)||0);
-    const pr=Math.max(0,parseFloat(r.querySelector('.price').value)||0);
+    const q=Number(r.querySelector('.qty').value);
+    const pr=Number(r.querySelector('.price').value);
+    if(!Number.isFinite(q)||!Number.isInteger(q)||q<0)return toast('La quantité doit être un entier positif ou nul.','error');
+    if(!Number.isFinite(pr)||pr<0)return toast('Le prix doit être un nombre positif ou nul.','error');
     if(q<=0)continue;
     items.push({code:p.code,name:p.name,cat:p.cat,qty:q,price:pr,total:q*pr});
     sub+=q*pr;used[p.id]=(used[p.id]||0)+q;
   }
   if(!items.length)return toast('Articles invalides','error');
-  if(!id){for(const pid in used){const p=D.products.find(x=>x.id===pid);if(p&&used[pid]>p.stock){if(!confirm('Stock insuffisant pour « '+p.name+' ». Continuer ?'))return}}}
+  for(const pid in used){const p=D.products.find(x=>x.id===pid);if(p){const available=(Number(p.stock)||0)+(id?((D.invoices.find(x=>x.id===id)?.items||[]).filter(it=>it.code===p.code).reduce((n,it)=>n+(Number(it.qty)||0),0)):0);if(used[pid]>available)return toast('Stock insuffisant pour « '+p.name+' ». Disponible : '+available+'.','error')}}
   const disc=Math.max(0,parseFloat($('discount').value)||0),tax=Math.max(0,parseFloat($('taxRate').value)||0);
   const ad=Math.max(0,sub-disc),ta=ad*(tax/100),total=ad+ta;
-  const pay=Math.min(Math.max(0,parseFloat($('paid').value)||0),total);
-  const status=pay>=total?'PAID':pay>0?'PARTIAL':'UNPAID';
+  const rawPaid=Number($('paid').value);
+  if(!Number.isFinite(rawPaid)||rawPaid<0)return toast('Le montant payé est invalide.','error');
+  const invBefore=id?D.invoices.find(x=>x.id===id):null;
+  if(id&&!invBefore)return toast('Facture introuvable.','error');
+  const ledgerPaid=invBefore?active(D.payments).filter(p=>p.invoice===invBefore.no).reduce((sum,p)=>sum+(Number(p.amount)||0),0):0;
+  const pay=id?Math.max(ledgerPaid,Number(invBefore.paid)||0):rawPaid;
+  if(pay>total)return toast('Le montant déjà encaissé dépasse le nouveau total. Corrigez les paiements avant de modifier cette facture.','error');
+  const status=pay>=total-0.005?'PAID':pay>0?'PARTIAL':'UNPAID';
   if(id){
-    const inv=D.invoices.find(x=>x.id===id);if(!inv)return;
+    const inv=invBefore;
     (inv.items||[]).forEach(it=>{const p=D.products.find(x=>x.code===it.code);if(p)p.stock+=it.qty});
     for(const pid in used){const p=D.products.find(x=>x.id===pid);if(p)p.stock=Math.max(0,p.stock-used[pid])}
     Object.assign(inv,{date:$('idate').value||today(),dueDate:$('idue').value||addDays(today(),30),client:c.name,clientPhone:c.phone||'',clientAddress:c.address||'',clientEmail:c.email||'',vendor:$('iv').value.trim()||U.name,items,subtotal:sub,discount:disc,taxRate:tax,taxAmount:ta,total,paid:pay,status,notes:$('invNotes').value.trim(),_updatedAt:now()});
@@ -1563,8 +1583,9 @@ function syncPayAmount(){const i=D.invoices.find(x=>x.id===$('pi').value);if(i)$
 function addPay(){
   if(!can('create','payments'))return toast('Permission refusée','error');
   const inv=D.invoices.find(x=>x.id===$('pi').value);if(!inv)return;
-  const due=inv.total-inv.paid,amt=Math.min(Math.max(0,parseFloat($('pa').value)||0),due);
-  if(amt<=0)return toast('Montant invalide','error');
+  const due=inv.total-inv.paid,amt=Number($('pa').value);
+  if(!Number.isFinite(amt)||amt<=0)return toast('Le montant doit être supérieur à zéro.','error');
+  if(amt>due+0.005)return toast('Le montant dépasse le solde de la facture ('+money(due)+').','error');
   applyPayment(inv,amt,$('pm').value);closeModal();
 }
 function quickPay(id){
@@ -1584,8 +1605,9 @@ function quickPay(id){
 }
 function confirmQuickPay(id){
   const inv=D.invoices.find(x=>x.id===id);if(!inv)return;
-  const due=inv.total-inv.paid,amt=Math.min(Math.max(0,parseFloat($('qpa').value)||0),due);
-  if(amt<=0)return toast('Montant invalide','error');
+  const due=inv.total-inv.paid,amt=Number($('qpa').value);
+  if(!Number.isFinite(amt)||amt<=0)return toast('Le montant doit être supérieur à zéro.','error');
+  if(amt>due+0.005)return toast('Le montant dépasse le solde de la facture ('+money(due)+').','error');
   applyPayment(inv,amt,$('qpm').value);closeModal();
 }
 function applyPayment(inv,amount,method){
@@ -1661,9 +1683,14 @@ function saveRefund(){
   const product=productId?activeProducts().find(p=>p.id===productId):null;
   const qty=Math.max(1,parseInt($('rfqty').value,10)||1);
   const invId=$('rfinv').value;
-  const inv=invId?D.invoices.find(x=>x.id===invId):null;
+  const inv=invId?active(D.invoices).find(x=>x.id===invId):null;
+  if(invId&&!inv)return toast('Facture associée introuvable.','error');
+  if(inv&&inv.client!==client)return toast('Le client choisi ne correspond pas à la facture.','error');
+  if(!Number.isInteger(qty)||qty<1)return toast('La quantité retournée doit être un entier supérieur à zéro.','error');
+  const amountCents=Math.round(amount*100)/100;
+  if(inv){const already=active(D.refunds).filter(r=>r.invoiceNo===inv.no).reduce((sum,r)=>sum+(Number(r.amount)||0),0);const remaining=Math.max(0,(Number(inv.total)||0)-already);if(amountCents>remaining+0.005)return toast('Le remboursement dépasse le montant encore remboursable ('+money(remaining)+').','error')}
   const restock=$('rfrestock').value==='1';
-  const refund={id:uid(),_updatedAt:now(),no:nextNo('REF',D.refunds),date:$('rfdate').value||today(),client,invoiceNo:inv?inv.no:'',productCode:product?product.code:'',productName:product?product.name:'Produit retourné',qty,price:product?product.price:amount,total:amount,amount,reason,method:$('rfmethod').value,restock,user:U.u};
+  const refund={id:uid(),_updatedAt:now(),no:nextNo('REF',D.refunds),date:$('rfdate').value||today(),client,invoiceNo:inv?inv.no:'',productCode:product?product.code:'',productName:product?product.name:'Produit retourné',qty,price:product?product.price:amountCents,total:amountCents,amount:amountCents,reason,method:$('rfmethod').value,restock,user:U.u};
   D.refunds.push(refund);
   if(restock&&product){product.stock=(+product.stock||0)+qty;product._updatedAt=now()}
   if(inv){inv.refunded=(inv.refunded||0)+amount;inv._updatedAt=now()}
@@ -1808,7 +1835,7 @@ function saveUser(id){
   if(!un){toast('Username obligatoire','error');return}
   if(!id){
     if(!pass)return toast('Mot de passe obligatoire','error');
-    if(pass.length<4)return toast('Minimum 4 caractères','error');
+    if(pass.length<12)return toast('Utilisez au moins 12 caractères pour le mot de passe.','error');
     if(pass!==pass2)return toast('Les mots de passe ne correspondent pas','error');
     if(activeUsers().some(x=>String(x.u).toLowerCase()===un.toLowerCase()))return toast('Username déjà utilisé','error');
     D.users.push({id:uid(),_updatedAt:now(),u:un,name,pass,role,created:now()});
@@ -1817,7 +1844,7 @@ function saveUser(id){
     if(fbReady)saveCloud(true);
   } else {
     const u=D.users.find(x=>x.id===id);if(!u)return;
-    if(pass){if(pass.length<4)return toast('Minimum 4 caractères','error');u.pass=pass}
+    if(pass){if(pass.length<12)return toast('Utilisez au moins 12 caractères pour le mot de passe.','error');u.pass=pass}
     u.name=name;u.role=role;u._updatedAt=now();
     log('Modification user',un);toast('✓ Modifié','success');
     save();closeModal();
@@ -1836,7 +1863,7 @@ function changeMyPassword(){
   const oldP=$('oldPass').value,np=$('newPass').value;
   if(!oldP||!np)return toast('Remplissez les deux champs','error');
   if(oldP!==U.pass)return toast('Mot de passe actuel incorrect','error');
-  if(np.length<4)return toast('Minimum 4 caractères','error');
+  if(np.length<12)return toast('Utilisez au moins 12 caractères pour le mot de passe.','error');
   U.pass=np;U._updatedAt=now();log('Changement mot de passe','');save();
   $('oldPass').value='';$('newPass').value='';
   toast('Mot de passe changé','success');
@@ -2157,7 +2184,7 @@ function backFromPrint(){$('printArea').style.display='none';page('invoices',doc
 
 function backup(){
   try{
-    const b=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
+    const b=new Blob([JSON.stringify({app:'SOLTECH',schemaVersion:10,exportedAt:now(),data:D},null,2)],{type:'application/json'});
     const a=document.createElement('a');a.href=URL.createObjectURL(b);
     a.download='SOLTECH_backup_'+today()+'.json';
     document.body.appendChild(a);a.click();
