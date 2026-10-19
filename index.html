@@ -404,6 +404,7 @@ body:has(#thermalArea:not(:empty)) .main>*:not(#thermalArea){display:none!import
       <div class="top-actions no-print">
         <span id="cloudStatus" class="cloud-status"><span class="cloud-dot"></span><span id="cloudText">Connexion…</span></span>
         <button class="btn l" onclick="backup()">💾 Backup</button>
+        <button class="btn l" onclick="restoreBackup()">📥 Restore</button>
         <button class="btn p" onclick="newInvoice()">+ Nouvelle facture</button>
       </div>
     </div>
@@ -812,7 +813,7 @@ function initFirebase(){
     auth=firebase.auth();
     window.db=firebase.firestore();
     db.enablePersistence({synchronizeTabs:true}).catch(e=>console.log('Persistance Firestore:',e.message));
-    auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(e=>console.warn('Persistance Auth:',e.message));
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e=>console.warn('Persistance Auth:',e.message));
     fbReady=true;authReady=true;
     $('cloudInit').textContent='🔐 Authentification Firebase prête — connexion requise';
     $('cloudInit').style.color='#059669';
@@ -1093,6 +1094,22 @@ function openApp(){
   $('who').textContent=U.name;
   $('role').textContent=U.role;
   applyPermissions();render();updateRequestsBadge();
+  
+  // ═══ SISTÈM DEKONEKSYON OTTOMATIK (15 min san aktivite) ═══
+  if(window.__idleTimer) clearTimeout(window.__idleTimer);
+  function startIdleTimer() {
+    clearTimeout(window.__idleTimer);
+    window.__idleTimer = setTimeout(() => {
+      if (auth && auth.currentUser) {
+        toast('Sekirite: Sesyon ekspire apre 15 minit san aktivite.', 'warn');
+        setTimeout(() => logout(), 2000);
+      }
+    }, 15 * 60 * 1000);
+  }
+  ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, startIdleTimer, { passive: true });
+  });
+  startIdleTimer();
 }
 async function logout(){
   storage.sd('s');U=null;
@@ -2831,6 +2848,40 @@ function backup(){
     setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
     toast('Backup exporté','success');
   }catch(e){toast('Erreur export','error')}
+}
+
+function restoreBackup(){
+  if(U?.role !== 'ADMIN') return toast('Sèlman ADMIN ka fè Restore','error');
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = evt => {
+      try {
+        const parsed = JSON.parse(evt.target.result);
+        if(!parsed.data) throw new Error('Fichye a pa gen done SOLTECH.');
+        
+        if(!confirm('⚠️ ATANSYON: Sa ap ranplase TOUT done aktyèl yo ak sa ki nan fichye a. Èske w sèten?')) return;
+        
+        D = parsed.data;
+        stampLocalItems();
+        sanitizeUserRecords();
+        
+        storage.set(K, JSON.stringify(D));
+        save(); // Sovgade nan Firebase
+        
+        toast('✓ Done yo retounen avèk siksè!', 'success');
+        setTimeout(() => location.reload(), 2000);
+      } catch(err) {
+        toast('Erè: ' + err.message, 'error');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 }
 
 $('loginLogo').innerHTML=LOGO({height:70});
