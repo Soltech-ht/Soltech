@@ -812,7 +812,7 @@ function initFirebase(){
     auth=firebase.auth();
     window.db=firebase.firestore();
     db.enablePersistence({synchronizeTabs:true}).catch(e=>console.log('Persistance Firestore:',e.message));
-    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e=>console.warn('Persistance Auth:',e.message));
+    auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(e=>console.warn('Persistance Auth:',e.message));
     fbReady=true;authReady=true;
     $('cloudInit').textContent='🔐 Authentification Firebase prête — connexion requise';
     $('cloudInit').style.color='#059669';
