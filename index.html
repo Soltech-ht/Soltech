@@ -322,6 +322,13 @@ body:has(#thermalArea:not(:empty)) .main>*:not(#thermalArea){display:none!import
 #printArea .rep-block{padding:12px 14px;margin-bottom:12px}
 #printArea .rep-block h5{font-size:11px}
 #printArea .rep-block p{font-size:12.5px;line-height:1.5}
+
+/* ═══ KOREKSYON KOUPE PAJ TABLO ═══ */
+#printArea table { page-break-inside: auto; }
+#printArea tr { page-break-inside: avoid; page-break-after: auto; }
+#printArea thead { display: table-header-group; }
+#printArea tfoot { display: table-footer-group; }
+#printArea td, #printArea th { word-break: break-word; overflow-wrap: break-word; }
 }
 </style>
 </head>
@@ -2165,7 +2172,7 @@ async function shareAsPDF(mode){
     if(!element)throw new Error('Document introuvable');
     await waitForImages(element);
     await new Promise(r=>setTimeout(r,400));
-    const opt={margin:[0.4,0.35,0.4,0.35],filename:obj.no+'.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,letterRendering:true,logging:false,backgroundColor:'#fff',allowTaint:true},jsPDF:{unit:'in',format:'letter',orientation:'portrait'},pagebreak:{mode:['avoid-all','css','legacy']}};
+    const opt={margin:[0.4,0.35,0.4,0.35],filename:obj.no+'.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,letterRendering:true,logging:false,backgroundColor:'#fff',allowTaint:true,scrollY:0,scrollX:0},jsPDF:{unit:'in',format:'letter',orientation:'portrait'},pagebreak:{mode:['css','legacy'],avoid:['tr','.no-break']}};
     const blob=await html2pdf().set(opt).from(element).outputPdf('blob');
     const fileName=obj.no+'.pdf';
     if(mode==='native'){
@@ -2230,8 +2237,7 @@ function printDoc(kind,id,collection){
   window.__shareKind=kind;window.__shareId=id;window.__shareCol=collection;
   const C=D.company;
   if(kind==='REP'){renderRepairDoc(obj);return}
-  const MAX=13;let items=obj.items||[],extraNote='';
-  if(items.length>MAX){const e=items.slice(MAX);const et=e.reduce((s,x)=>s+x.total,0);items=items.slice(0,MAX);extraNote=`<tr><td colspan="5" style="text-align:right;font-style:italic;color:#64748b;padding:6px 9px">… ${e.length} autre(s) — ${money(et)}</td></tr>`}
+  let items=obj.items||[],extraNote='';
   const itemsHTML=items.map((x,i)=>`<tr><td class="idx" style="text-align:center;color:#64748b;font-weight:600">${i+1}</td><td style="font-family:monospace;font-size:10.5px;color:#64748b">${esc(x.code)}</td><td>${esc(x.name)}${x.cat?`<br><span style="font-size:10px;color:#64748b">${esc(x.cat)}</span>`:''}</td><td style="text-align:center">${x.qty}</td><td style="text-align:right">${money(x.price)}</td><td style="text-align:right">${money(x.total)}</td></tr>`).join('')+extraNote;
   let title='',subtitle='',warning='',statusLine='';
   if(kind==='FACTURE'){
