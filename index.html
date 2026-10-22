@@ -157,7 +157,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .modalbox{background:#fff;border-radius:16px;padding:26px;width:min(1000px,100%);max-height:92vh;overflow:auto;box-shadow:0 30px 80px rgba(15,23,42,.4);animation:modalIn .3s cubic-bezier(.34,1.56,.64,1)}
 @keyframes modalIn{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
-.item{display:grid;grid-template-columns:2.5fr .7fr 1fr 40px;gap:8px;margin-bottom:8px;align-items:end}
+.item{display:grid;grid-template-columns:2fr 80px 1fr 40px;gap:8px;margin-bottom:8px;align-items:end}
 .item label{margin-top:0}
 .prod-pick-btn{width:100%;text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-size:13px;transition:all .2s ease;display:flex;align-items:center;justify-content:space-between;gap:6px;font-family:inherit;color:inherit}
 .prod-pick-btn:hover{border-color:var(--o);background:#fff8f0}
@@ -255,7 +255,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .pos-cart-head{padding:14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
 .pos-cart-head h3{margin:0;font-size:15px}
 .pos-cart-body{flex:1;overflow-y:auto;padding:8px}
-.pos-item{display:grid;grid-template-columns:1fr 60px 70px 28px;gap:6px;align-items:center;padding:8px;border-bottom:1px solid var(--line)}
+.pos-item{display:grid;grid-template-columns:1fr 70px 70px 28px;gap:6px;align-items:center;padding:8px;border-bottom:1px solid var(--line)}
 .pos-item .pi-name{font-size:12px;font-weight:600;line-height:1.2}
 .pos-item .pi-price{font-size:10.5px;color:var(--muted);margin-top:2px}
 .pos-item input{padding:5px 6px;font-size:12px;text-align:center}
@@ -279,7 +279,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .main{margin-left:0;padding:18px}
 .menu-btn{display:inline-flex!important}
 }
-@media(max-width:560px){.cards,.cats{grid-template-columns:1fr}.item{grid-template-columns:1fr 1fr 40px}.item>div:first-child{grid-column:1/-1}}
+@media(max-width:560px){.cards,.cats{grid-template-columns:1fr}.item{grid-template-columns:1fr 80px 1fr 40px}.item>div:first-child{grid-column:1/-1}}
 #printArea{display:none}
 @media print{
 @page{size:8.5in 11in portrait;margin:0}
@@ -329,6 +329,7 @@ body:has(#thermalArea:not(:empty)) .main>*:not(#thermalArea){display:none!import
 #printArea thead { display: table-header-group; }
 #printArea tfoot { display: table-footer-group; }
 #printArea td, #printArea th { word-break: break-word; overflow-wrap: break-word; }
+.no-break { page-break-inside: avoid !important; break-inside: avoid !important; }
 }
 </style>
 </head>
@@ -2172,7 +2173,7 @@ async function shareAsPDF(mode){
     if(!element)throw new Error('Document introuvable');
     await waitForImages(element);
     await new Promise(r=>setTimeout(r,400));
-    const opt={margin:[0.4,0.35,0.4,0.35],filename:obj.no+'.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,letterRendering:true,logging:false,backgroundColor:'#fff',allowTaint:true,scrollY:0,scrollX:0},jsPDF:{unit:'in',format:'letter',orientation:'portrait'},pagebreak:{mode:['css','legacy'],avoid:['tr','.no-break']}};
+    const opt={margin:[0,0,0,0],filename:obj.no+'.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,letterRendering:true,logging:false,backgroundColor:'#fff',allowTaint:true,scrollY:0,scrollX:0},jsPDF:{unit:'in',format:'letter',orientation:'portrait'},pagebreak:{mode:['css'],avoid:['tr','.no-break']}};
     const blob=await html2pdf().set(opt).from(element).outputPdf('blob');
     const fileName=obj.no+'.pdf';
     if(mode==='native'){
@@ -2238,7 +2239,7 @@ function printDoc(kind,id,collection){
   const C=D.company;
   if(kind==='REP'){renderRepairDoc(obj);return}
   let items=obj.items||[],extraNote='';
-  const itemsHTML=items.map((x,i)=>`<tr><td class="idx" style="text-align:center;color:#64748b;font-weight:600">${i+1}</td><td style="font-family:monospace;font-size:10.5px;color:#64748b">${esc(x.code)}</td><td>${esc(x.name)}${x.cat?`<br><span style="font-size:10px;color:#64748b">${esc(x.cat)}</span>`:''}</td><td style="text-align:center">${x.qty}</td><td style="text-align:right">${money(x.price)}</td><td style="text-align:right">${money(x.total)}</td></tr>`).join('')+extraNote;
+  const itemsHTML=items.map((x,i)=>`<tr><td class="idx" style="text-align:center;color:#64748b;font-weight:600">${i+1}</td><td style="font-family:monospace;font-size:10.5px;color:#64748b">${esc(x.code)}</td><td>${esc(x.name)}${x.cat?`<br><span style="font-size:10px;color:#64748b">${esc(x.cat)}</span>`:''}</td><td style="text-align:center;white-space:nowrap;">${x.qty}</td><td style="text-align:right">${money(x.price)}</td><td style="text-align:right">${money(x.total)}</td></tr>`).join('')+extraNote;
   let title='',subtitle='',warning='',statusLine='';
   if(kind==='FACTURE'){
     title='FACTURE';subtitle='Invoice';
@@ -2288,38 +2289,40 @@ function printDoc(kind,id,collection){
         <th style="padding:7px 9px;font-size:10px;text-transform:uppercase;text-align:left;width:24px">#</th>
         <th style="padding:7px 9px;font-size:10px;text-transform:uppercase;text-align:left;width:78px">Code</th>
         <th style="padding:7px 9px;font-size:10px;text-transform:uppercase;text-align:left">Description</th>
-        <th style="padding:7px 9px;font-size:10px;text-transform:uppercase;text-align:center;width:45px">Qté</th>
+        <th style="padding:7px 9px;font-size:10px;text-transform:uppercase;text-align:center;width:60px;white-space:nowrap;">Qté</th>
         <th style="padding:7px 9px;font-size:10px;text-transform:uppercase;text-align:right;width:95px">Prix unit.</th>
         <th style="padding:7px 9px;font-size:10px;text-transform:uppercase;text-align:right;width:105px">Montant</th>
       </tr></thead>
       <tbody style="font-size:11.5px">${itemsHTML}</tbody>
     </table>
-    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:18px;margin-top:12px;padding-top:12px;border-top:1px dashed #e2e8f0">
-      <div>
-        <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:#64748b;margin:0 0 5px;font-weight:700">Notes &amp; conditions</div>
-        <p style="margin:0 0 8px;font-size:11px;color:#334155;line-height:1.45">${esc(obj.notes||'Merci de votre confiance.').replace(/\n/g,'<br>')}</p>
-        <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:#64748b;margin:10px 0 5px;font-weight:700">Coordonnées bancaires</div>
-        <p style="font-size:10.5px;color:#64748b;margin:0">Paiement à l'ordre de <b>${esc(bankName)}</b><br>Mobile Money : MonCash / NatCash</p>
+    <div class="no-break">
+      <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:18px;margin-top:12px;padding-top:12px;border-top:1px dashed #e2e8f0">
+        <div>
+          <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:#64748b;margin:0 0 5px;font-weight:700">Notes &amp; conditions</div>
+          <p style="margin:0 0 8px;font-size:11px;color:#334155;line-height:1.45">${esc(obj.notes||'Merci de votre confiance.').replace(/\n/g,'<br>')}</p>
+          <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:#64748b;margin:10px 0 5px;font-weight:700">Coordonnées bancaires</div>
+          <p style="font-size:10.5px;color:#64748b;margin:0">Paiement à l'ordre de <b>${esc(bankName)}</b><br>Mobile Money : MonCash / NatCash</p>
+        </div>
+        <div style="font-size:11.5px">
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Sous-total</span><span style="font-weight:600">${money(obj.subtotal)}</span></div>
+          ${obj.discount>0?`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Remise</span><span style="font-weight:600;color:#dc2626">− ${money(obj.discount)}</span></div>`:''}
+          ${obj.taxRate>0?`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Taxe (${obj.taxRate}%)</span><span style="font-weight:600">${money(obj.taxAmount)}</span></div>`:''}
+          <div style="display:flex;justify-content:space-between;padding:7px 0;border-top:2px solid #0f172a;border-bottom:2px solid #0f172a;margin-top:4px;font-size:13.5px"><span style="font-weight:800;text-transform:uppercase">${kind==='PROFORMAT'?'Total proformat':'Total'}</span><span style="color:#c65b20;font-weight:800;font-size:14.5px">${money(obj.total)}<span style="display:block;font-size:9.5px;color:#64748b;font-weight:400">${htg(obj.total,obj.rate||D.rate)}</span></span></div>
+          ${showPaid?`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Payé</span><span style="font-weight:600;color:#059669">${money(obj.paid)}</span></div>
+          ${lastPay?`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0;background:#f0fdf4"><span style="color:#64748b">Versement (${fmtDate(lastPay.date)})</span><span style="font-weight:600;color:#059669">${money(lastPay.amount)}</span></div>`:''}
+          <div style="display:flex;justify-content:space-between;padding:6px 0 4px;border-top:1px dashed #e2e8f0;border-bottom:1px solid #e2e8f0;margin-top:4px"><span style="color:#64748b;font-weight:700">Balance</span><span style="font-weight:800;color:${bal>0?'#dc2626':'#059669'}">${money(bal)}<span style="display:block;font-size:9.5px;color:#64748b;font-weight:400">${htg(bal,obj.rate||D.rate)}</span></span></div>`:''}
+        </div>
       </div>
-      <div style="font-size:11.5px">
-        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Sous-total</span><span style="font-weight:600">${money(obj.subtotal)}</span></div>
-        ${obj.discount>0?`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Remise</span><span style="font-weight:600;color:#dc2626">− ${money(obj.discount)}</span></div>`:''}
-        ${obj.taxRate>0?`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Taxe (${obj.taxRate}%)</span><span style="font-weight:600">${money(obj.taxAmount)}</span></div>`:''}
-        <div style="display:flex;justify-content:space-between;padding:7px 0;border-top:2px solid #0f172a;border-bottom:2px solid #0f172a;margin-top:4px;font-size:13.5px"><span style="font-weight:800;text-transform:uppercase">${kind==='PROFORMAT'?'Total proformat':'Total'}</span><span style="color:#c65b20;font-weight:800;font-size:14.5px">${money(obj.total)}<span style="display:block;font-size:9.5px;color:#64748b;font-weight:400">${htg(obj.total,obj.rate||D.rate)}</span></span></div>
-        ${showPaid?`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Payé</span><span style="font-weight:600;color:#059669">${money(obj.paid)}</span></div>
-        ${lastPay?`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0;background:#f0fdf4"><span style="color:#64748b">Versement (${fmtDate(lastPay.date)})</span><span style="font-weight:600;color:#059669">${money(lastPay.amount)}</span></div>`:''}
-        <div style="display:flex;justify-content:space-between;padding:6px 0 4px;border-top:1px dashed #e2e8f0;border-bottom:1px solid #e2e8f0;margin-top:4px"><span style="color:#64748b;font-weight:700">Balance</span><span style="font-weight:800;color:${bal>0?'#dc2626':'#059669'}">${money(bal)}<span style="display:block;font-size:9.5px;color:#64748b;font-weight:400">${htg(bal,obj.rate||D.rate)}</span></span></div>`:''}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:22px">
+        <div style="border-top:1px solid #0f172a;padding-top:4px;font-size:10px;color:#64748b;text-align:center">${kind==='PROFORMAT'?'Signature du client':'Signature autorisée'}</div>
+        <div style="border-top:1px dashed #e2e8f0;padding-top:4px;font-size:10px;color:#64748b;text-align:center">Cachet et date</div>
       </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:22px">
-      <div style="border-top:1px solid #0f172a;padding-top:4px;font-size:10px;color:#64748b;text-align:center">${kind==='PROFORMAT'?'Signature du client':'Signature autorisée'}</div>
-      <div style="border-top:1px dashed #e2e8f0;padding-top:4px;font-size:10px;color:#64748b;text-align:center">Cachet et date</div>
-    </div>
-    <div style="margin-top:16px;padding-top:10px;border-top:2px solid #c65b20;text-align:center;font-size:10px;color:#64748b">
-      <div style="font-size:12px;color:#c65b20;font-weight:700;margin-bottom:3px">✨ ${esc(C.thankYouMessage||'Merci de votre confiance !')}</div>
-      <div style="font-size:10.5px;color:#334155;font-style:italic;margin-bottom:6px">${esc(C.extraMessage||'')}</div>
-      <div>${esc(C.name)} — ${esc(C.tagline)} · ${esc(C.address)}, ${esc(C.country)} · ${esc(C.phones)}</div>
-      <div style="margin-top:2px">Généré le ${new Date().toLocaleString('fr-FR')} · ${esc(obj.no)}</div>
+      <div style="margin-top:16px;padding-top:10px;border-top:2px solid #c65b20;text-align:center;font-size:10px;color:#64748b">
+        <div style="font-size:12px;color:#c65b20;font-weight:700;margin-bottom:3px">✨ ${esc(C.thankYouMessage||'Merci de votre confiance !')}</div>
+        <div style="font-size:10.5px;color:#334155;font-style:italic;margin-bottom:6px">${esc(C.extraMessage||'')}</div>
+        <div>${esc(C.name)} — ${esc(C.tagline)} · ${esc(C.address)}, ${esc(C.country)} · ${esc(C.phones)}</div>
+        <div style="margin-top:2px">Généré le ${new Date().toLocaleString('fr-FR')} · ${esc(obj.no)}</div>
+      </div>
     </div>
   </div>
   <div class="no-print" style="text-align:center;margin-top:24px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
@@ -2337,7 +2340,7 @@ function renderRepairDoc(r){
   const C=D.company;
   const sMap={RECU:['REÇU','#2563eb'],EN_COURS:['EN COURS','#d97706'],TERMINE:['TERMINÉ','#059669'],LIVRE:['LIVRÉ','#059669'],ANNULE:['ANNULÉ','#64748b']};
   const [sl,sc]=sMap[r.status]||['—','#64748b'];
-  const parts=(r.parts||[]).map((p,i)=>`<tr><td style="text-align:center;color:#64748b">${i+1}</td><td>${esc(p.name)}</td><td style="text-align:center">${p.qty}</td><td style="text-align:right">${money(p.price)}</td><td style="text-align:right">${money(p.total)}</td></tr>`).join('');
+  const parts=(r.parts||[]).map((p,i)=>`<tr><td style="text-align:center;color:#64748b">${i+1}</td><td>${esc(p.name)}</td><td style="text-align:center;white-space:nowrap;">${p.qty}</td><td style="text-align:right">${money(p.price)}</td><td style="text-align:right">${money(p.total)}</td></tr>`).join('');
   const partsTotal=(r.parts||[]).reduce((s,p)=>s+p.total,0);
   const bankName=(C.bank||'SOLTECH ENERGIE');
   const qrData=buildQrData(r,'REP');
@@ -2369,23 +2372,25 @@ function renderRepairDoc(r){
     </div>
     ${r.diagnosis?`<div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;margin-bottom:10px;background:#fafbfc"><div style="font-size:9.5px;text-transform:uppercase;color:#c65b20;margin:0 0 6px;font-weight:700">🔍 Diagnostic</div><p style="margin:0;font-size:11.5px;white-space:pre-wrap">${esc(r.diagnosis).replace(/\n/g,'<br>')}</p></div>`:''}
     ${r.solution?`<div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;margin-bottom:10px;background:#fafbfc"><div style="font-size:9.5px;text-transform:uppercase;color:#c65b20;margin:0 0 6px;font-weight:700">🔧 Solution</div><p style="margin:0;font-size:11.5px;white-space:pre-wrap">${esc(r.solution).replace(/\n/g,'<br>')}</p></div>`:''}
-    ${(r.parts&&r.parts.length)?`<table style="width:100%;border-collapse:collapse;margin-bottom:12px"><thead><tr style="background:#c65b20;color:#fff"><th style="padding:7px 9px;font-size:10px;text-transform:uppercase;text-align:left;width:28px">#</th><th style="padding:7px 9px;font-size:10px;text-transform:uppercase;text-align:left">Pièce</th><th style="padding:7px 9px;font-size:10px;text-transform:uppercase;text-align:center;width:50px">Qté</th><th style="padding:7px 9px;font-size:10px;text-transform:uppercase;text-align:right;width:95px">Prix</th><th style="padding:7px 9px;font-size:10px;text-transform:uppercase;text-align:right;width:105px">Total</th></tr></thead><tbody style="font-size:11.5px">${parts}<tr><td colspan="4" style="text-align:right;font-weight:700;padding-top:8px">Sous-total</td><td style="text-align:right;font-weight:700;padding-top:8px">${money(partsTotal)}</td></tr></tbody></table>`:''}
-    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:18px;margin-top:12px;padding-top:12px;border-top:1px dashed #e2e8f0">
-      <div><div style="font-size:9.5px;text-transform:uppercase;color:#64748b;margin:0 0 5px;font-weight:700">Notes</div><p style="margin:0;font-size:11px;color:#334155">${esc(r.notes||'Aucune note.').replace(/\n/g,'<br>')}</p><div style="font-size:9.5px;text-transform:uppercase;color:#64748b;margin:10px 0 5px;font-weight:700">Coordonnées</div><p style="font-size:10.5px;color:#64748b;margin:0">Paiement à l'ordre de <b>${esc(bankName)}</b></p></div>
-      <div style="font-size:11.5px">
-        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Pièces</span><span style="font-weight:600">${money(partsTotal)}</span></div>
-        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Main d'œuvre</span><span style="font-weight:600">${money(r.laborCost||0)}</span></div>
-        <div style="display:flex;justify-content:space-between;padding:7px 0;border-top:2px solid #0f172a;border-bottom:2px solid #0f172a;margin-top:4px;font-size:13.5px"><span style="font-weight:800;text-transform:uppercase">Total</span><span style="color:#c65b20;font-weight:800;font-size:14.5px">${money(r.total||0)}<span style="display:block;font-size:9.5px;color:#64748b;font-weight:400">${htg(r.total||0,D.rate)}</span></span></div>
+    ${(r.parts&&r.parts.length)?`<table style="width:100%;border-collapse:collapse;margin-bottom:12px"><thead><tr style="background:#c65b20;color:#fff"><th style="padding:7px 9px;font-size:10px;text-transform:uppercase;text-align:left;width:28px">#</th><th style="padding:7px 9px;font-size:10px;text-transform:uppercase;text-align:left">Pièce</th><th style="padding:7px 9px;font-size:10px;text-transform:uppercase;text-align:center;width:60px;white-space:nowrap;">Qté</th><th style="padding:7px 9px;font-size:10px;text-transform:uppercase;text-align:right;width:95px">Prix</th><th style="padding:7px 9px;font-size:10px;text-transform:uppercase;text-align:right;width:105px">Total</th></tr></thead><tbody style="font-size:11.5px">${parts}<tr><td colspan="4" style="text-align:right;font-weight:700;padding-top:8px">Sous-total</td><td style="text-align:right;font-weight:700;padding-top:8px">${money(partsTotal)}</td></tr></tbody></table>`:''}
+    <div class="no-break">
+      <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:18px;margin-top:12px;padding-top:12px;border-top:1px dashed #e2e8f0">
+        <div><div style="font-size:9.5px;text-transform:uppercase;color:#64748b;margin:0 0 5px;font-weight:700">Notes</div><p style="margin:0;font-size:11px;color:#334155">${esc(r.notes||'Aucune note.').replace(/\n/g,'<br>')}</p><div style="font-size:9.5px;text-transform:uppercase;color:#64748b;margin:10px 0 5px;font-weight:700">Coordonnées</div><p style="font-size:10.5px;color:#64748b;margin:0">Paiement à l'ordre de <b>${esc(bankName)}</b></p></div>
+        <div style="font-size:11.5px">
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Pièces</span><span style="font-weight:600">${money(partsTotal)}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Main d'œuvre</span><span style="font-weight:600">${money(r.laborCost||0)}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:7px 0;border-top:2px solid #0f172a;border-bottom:2px solid #0f172a;margin-top:4px;font-size:13.5px"><span style="font-weight:800;text-transform:uppercase">Total</span><span style="color:#c65b20;font-weight:800;font-size:14.5px">${money(r.total||0)}<span style="display:block;font-size:9.5px;color:#64748b;font-weight:400">${htg(r.total||0,D.rate)}</span></span></div>
+        </div>
       </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:22px">
-      <div style="border-top:1px solid #0f172a;padding-top:4px;font-size:10px;color:#64748b;text-align:center">Signature du client</div>
-      <div style="border-top:1px solid #0f172a;padding-top:4px;font-size:10px;color:#64748b;text-align:center">Signature du technicien</div>
-    </div>
-    <div style="margin-top:16px;padding-top:10px;border-top:2px solid #c65b20;text-align:center;font-size:10px;color:#64748b">
-      <div style="font-size:12px;color:#c65b20;font-weight:700;margin-bottom:3px">✨ ${esc(C.thankYouMessage||'Merci de votre confiance !')}</div>
-      <div>${esc(C.name)} — ${esc(C.tagline)} · ${esc(C.address)}, ${esc(C.country)}</div>
-      <div style="margin-top:2px">Fiche ${esc(r.no)} · ${new Date().toLocaleString('fr-FR')}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:22px">
+        <div style="border-top:1px solid #0f172a;padding-top:4px;font-size:10px;color:#64748b;text-align:center">Signature du client</div>
+        <div style="border-top:1px solid #0f172a;padding-top:4px;font-size:10px;color:#64748b;text-align:center">Signature du technicien</div>
+      </div>
+      <div style="margin-top:16px;padding-top:10px;border-top:2px solid #c65b20;text-align:center;font-size:10px;color:#64748b">
+        <div style="font-size:12px;color:#c65b20;font-weight:700;margin-bottom:3px">✨ ${esc(C.thankYouMessage||'Merci de votre confiance !')}</div>
+        <div>${esc(C.name)} — ${esc(C.tagline)} · ${esc(C.address)}, ${esc(C.country)}</div>
+        <div style="margin-top:2px">Fiche ${esc(r.no)} · ${new Date().toLocaleString('fr-FR')}</div>
+      </div>
     </div>
   </div>
   <div class="no-print" style="text-align:center;margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
