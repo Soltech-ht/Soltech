@@ -1563,7 +1563,7 @@ function renderInvoices(){
   const q=($('iq').value||'').toLowerCase(),st=$('ist').value;
   const list=active(D.invoices).filter(i=>(!st||i.status===st)&&((i.no+' '+i.client+' '+i.vendor).toLowerCase().includes(q))).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   $('itb').innerHTML=list.map(i=>{
-    const bal=i.total-i.paid;
+    const bal=i.total-i.paid-(Number(i.laborAdvanceAmount)||0);
     const payBtn=bal>0&&can('create','payments')?`<button class="pay" onclick="quickPay('${i.id}')" title="Encaisser">💰</button>`:'';
     const refundBtn=can('create','refunds')?`<button class="refund" onclick="newRefund('${i.id}')" title="Remboursement">↩️</button>`:'';
     const editBtn=can('edit','invoices')?`<button class="edit" onclick="editInvoice('${i.id}')" title="Modifier">✏️</button>`:'';
@@ -1585,6 +1585,11 @@ function invoiceModal(id){
   const taxVal=e?e.taxRate:0;
   const paidVal=e?e.paid:0;
   const notesVal=e?e.notes:'';
+  
+  // NOUVO: Avance Main d'oeuvre
+  const laborAdvDescVal = e ? (e.laborAdvanceDesc || '') : '';
+  const laborAdvAmountVal = e ? (e.laborAdvanceAmount || '') : '';
+
   modal(`<h2>${e?'✏️ Modifier facture '+e.no:'Nouvelle facture'}</h2>
     <div class="form">
       <div><label>Client</label><select id="ic" onchange="applyClientDiscount()">${activeClients().map(c=>`<option value="${c.id}" ${c.name===clientName?'selected':''}>${esc(c.name)}${(c.discountRate||0)>0?' — rabais '+c.discountRate+'%':''}</option>`).join('')}</select></div>
@@ -1602,7 +1607,18 @@ function invoiceModal(id){
       <div><label>Payé (USD)</label><input id="paid" type="number" step="0.01" min="0" value="${paidVal}"></div>
       <div><label>Méthode</label><select id="method"><option ${e&&e.method==='Cash'?'selected':''}>Cash</option><option ${e&&e.method==='Virement'?'selected':''}>Virement</option><option ${e&&e.method==='Carte'?'selected':''}>Carte</option><option ${e&&e.method==='MonCash'?'selected':''}>MonCash</option><option ${e&&e.method==='NatCash'?'selected':''}>NatCash</option></select></div>
     </div>
-    <label>Notes</label><textarea id="invNotes" placeholder="Merci de votre confiance.">${esc(notesVal)}</textarea>
+    
+    <!-- NOUVO SEKSYON POU AVANS MAIN D'ŒUVRE -->
+    <div style="background:#fff7ed;border:1px dashed #fed7aa;border-radius:10px;padding:14px;margin-top:16px">
+      <h3 style="color:#c65b20;margin-bottom:10px;font-size:14px">🔧 Avance Main d'œuvre (Hors Facture)</h3>
+      <div class="form">
+        <div><label>Description (ex: Main d'œuvre App 1)</label><input id="laborAdvDesc" value="${esc(laborAdvDescVal)}" placeholder="Main d'œuvre app 1"></div>
+        <div><label>Montant (USD)</label><input id="laborAdvAmount" type="number" step="0.01" min="0" value="${laborAdvAmountVal}"></div>
+      </div>
+      <p class="muted" style="font-size:11px;margin-top:6px">💡 Ce montant s'affiche comme note sur la facture mais n'est pas compté dans le total (il est déduit du solde).</p>
+    </div>
+
+    <label>Notes générales</label><textarea id="invNotes" placeholder="Merci de votre confiance.">${esc(notesVal)}</textarea>
     <div class="actions"><button class="btn p" onclick="saveInvoice('${id||''}')">${e?'💾 Enregistrer':'Créer la facture'}</button><button class="btn l" onclick="closeModal()">Annuler</button></div>`);
   if(e&&e.items&&e.items.length)e.items.forEach(it=>addItem(it));
   else addItem();
@@ -1729,16 +1745,21 @@ function saveInvoice(id){
   const pay=id?Math.max(ledgerPaid,Number(invBefore.paid)||0):rawPaid;
   if(pay>total)return toast('Le montant déjà encaissé dépasse le nouveau total. Corrigez les paiements avant de modifier cette facture.','error');
   const status=pay>=total-0.005?'PAID':pay>0?'PARTIAL':'UNPAID';
+  
+  // NOUVO: Rekipere valè Avans Main d'oeuvre
+  const laborAdvDesc = $('laborAdvDesc').value.trim();
+  const laborAdvAmount = Math.max(0, parseFloat($('laborAdvAmount').value) || 0);
+
   if(id){
     const inv=invBefore;
     (inv.items||[]).forEach(it=>{const p=D.products.find(x=>x.code===it.code);if(p)p.stock+=it.qty});
     for(const pid in used){const p=D.products.find(x=>x.id===pid);if(p)p.stock=Math.max(0,p.stock-used[pid])}
-    Object.assign(inv,{date:$('idate').value||today(),dueDate:$('idue').value||addDays(today(),30),client:c.name,clientPhone:c.phone||'',clientAddress:c.address||'',clientEmail:c.email||'',vendor:$('iv').value.trim()||U.name,items,subtotal:sub,discount:disc,taxRate:tax,taxAmount:ta,total,paid:pay,status,notes:$('invNotes').value.trim(),_updatedAt:now()});
+    Object.assign(inv,{date:$('idate').value||today(),dueDate:$('idue').value||addDays(today(),30),client:c.name,clientPhone:c.phone||'',clientAddress:c.address||'',clientEmail:c.email||'',vendor:$('iv').value.trim()||U.name,items,subtotal:sub,discount:disc,taxRate:tax,taxAmount:ta,total,paid:pay,status,notes:$('invNotes').value.trim(),laborAdvanceDesc:laborAdvDesc,laborAdvanceAmount:laborAdvAmount,_updatedAt:now()});
     log('Modification facture',inv.no+' — '+money(total),inv.vendor);
     toast('Facture '+inv.no+' modifiée','success');save();closeModal();
     printDoc('FACTURE',inv.id,'invoices');
   } else {
-    const inv={id:uid(),_updatedAt:now(),no:nextNo('INV',D.invoices),date:$('idate').value||today(),dueDate:$('idue').value||addDays(today(),30),client:c.name,clientPhone:c.phone||'',clientAddress:c.address||'',clientEmail:c.email||'',vendor:$('iv').value.trim()||U.name,user:U.u,items,subtotal:sub,discount:disc,taxRate:tax,taxAmount:ta,total,paid:pay,status,rate:D.rate,notes:$('invNotes').value.trim()};
+    const inv={id:uid(),_updatedAt:now(),no:nextNo('INV',D.invoices),date:$('idate').value||today(),dueDate:$('idue').value||addDays(today(),30),client:c.name,clientPhone:c.phone||'',clientAddress:c.address||'',clientEmail:c.email||'',vendor:$('iv').value.trim()||U.name,user:U.u,items,subtotal:sub,discount:disc,taxRate:tax,taxAmount:ta,total,paid:pay,status,rate:D.rate,notes:$('invNotes').value.trim(),laborAdvanceDesc:laborAdvDesc,laborAdvanceAmount:laborAdvAmount};
     D.invoices.push(inv);
     for(const pid in used){const p=D.products.find(x=>x.id===pid);if(p)p.stock=Math.max(0,p.stock-used[pid])}
     if(pay>0)D.payments.push({id:uid(),_updatedAt:now(),date:inv.date,invoice:inv.no,client:c.name,amount:pay,method:$('method').value,user:U.u});
@@ -1765,19 +1786,22 @@ function renderPayments(){
 }
 function payForm(){
   if(!can('create','payments'))return toast('Permission refusée','error');
-  const open=active(D.invoices).filter(i=>i.total>i.paid);
+  const open=active(D.invoices).filter(i=>(i.total-i.paid-(Number(i.laborAdvanceAmount)||0))>0);
   if(!open.length)return toast('Aucune facture avec solde','warn');
   modal(`<h2>Nouveau paiement</h2><label>Facture</label>
-    <select id="pi" onchange="syncPayAmount()">${open.map(i=>`<option value="${i.id}">${esc(i.no)} — ${esc(i.client)} — solde ${money(i.total-i.paid)}</option>`).join('')}</select>
-    <label>Montant USD</label><input id="pa" type="number" step="0.01" min="0" value="${(open[0].total-open[0].paid).toFixed(2)}">
+    <select id="pi" onchange="syncPayAmount()">${open.map(i=>`<option value="${i.id}">${esc(i.no)} — ${esc(i.client)} — solde ${money(i.total-i.paid-(Number(i.laborAdvanceAmount)||0))}</option>`).join('')}</select>
+    <label>Montant USD</label><input id="pa" type="number" step="0.01" min="0" value="${(open[0].total-open[0].paid-(Number(open[0].laborAdvanceAmount)||0)).toFixed(2)}">
     <label>Méthode</label><select id="pm"><option>Cash</option><option>Virement</option><option>Carte</option><option>MonCash</option><option>NatCash</option></select>
     <div class="actions"><button class="btn p" onclick="addPay()">Enregistrer</button><button class="btn l" onclick="closeModal()">Annuler</button></div>`);
 }
-function syncPayAmount(){const i=D.invoices.find(x=>x.id===$('pi').value);if(i)$('pa').value=(i.total-i.paid).toFixed(2)}
+function syncPayAmount(){
+  const i=D.invoices.find(x=>x.id===$('pi').value);
+  if(i)$('pa').value=(i.total-i.paid-(Number(i.laborAdvanceAmount)||0)).toFixed(2);
+}
 function addPay(){
   if(!can('create','payments'))return toast('Permission refusée','error');
   const inv=D.invoices.find(x=>x.id===$('pi').value);if(!inv)return;
-  const due=inv.total-inv.paid,amt=Number($('pa').value);
+  const due=inv.total-inv.paid-(Number(inv.laborAdvanceAmount)||0),amt=Number($('pa').value);
   if(!Number.isFinite(amt)||amt<=0)return toast('Le montant doit être supérieur à zéro.','error');
   if(amt>due+0.005)return toast('Le montant dépasse le solde de la facture ('+money(due)+').','error');
   applyPayment(inv,amt,$('pm').value);closeModal();
@@ -1785,7 +1809,7 @@ function addPay(){
 function quickPay(id){
   if(!can('create','payments'))return toast('Permission refusée','error');
   const inv=active(D.invoices).find(x=>x.id===id);if(!inv)return;
-  const bal=inv.total-inv.paid;if(bal<=0)return toast('Déjà payée','warn');
+  const bal=inv.total-inv.paid-(Number(inv.laborAdvanceAmount)||0);if(bal<=0)return toast('Déjà payée','warn');
   modal(`<h2>💰 Encaissement rapide</h2>
     <div style="background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:16px">
       <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span class="muted">Facture</span><b>${esc(inv.no)}</b></div>
@@ -1799,7 +1823,7 @@ function quickPay(id){
 }
 function confirmQuickPay(id){
   const inv=D.invoices.find(x=>x.id===id);if(!inv)return;
-  const due=inv.total-inv.paid,amt=Number($('qpa').value);
+  const due=inv.total-inv.paid-(Number(inv.laborAdvanceAmount)||0),amt=Number($('qpa').value);
   if(!Number.isFinite(amt)||amt<=0)return toast('Le montant doit être supérieur à zéro.','error');
   if(amt>due+0.005)return toast('Le montant dépasse le solde de la facture ('+money(due)+').','error');
   applyPayment(inv,amt,$('qpm').value);closeModal();
@@ -2109,14 +2133,14 @@ function renderReports(){
   $('rn').textContent=list.length;
   $('rs').textContent=money(gross);
   $('rp').textContent=money(list.reduce((s,i)=>s+i.paid,0));
-  $('rd').textContent=money(list.reduce((s,i)=>s+(i.total-i.paid),0));
+  $('rd').textContent=money(list.reduce((s,i)=>s+(i.total-i.paid-(Number(i.laborAdvanceAmount)||0)),0));
   if($('rr'))$('rr').textContent=money(totalRefunds);
   if($('rnet'))$('rnet').textContent=money(gross-totalRefunds);
   if($('rdisc'))$('rdisc').textContent=money(totalDiscounts);
   const vs2=[...new Set(list.map(i=>i.vendor))];
   $('rtb').innerHTML=vs2.map(v=>{
     const z=list.filter(i=>i.vendor===v);
-    return `<tr><td><b>${esc(v)}</b></td><td class="num">${z.length}</td><td class="num">${money(z.reduce((s,i)=>s+i.total,0))}</td><td class="num">${money(z.reduce((s,i)=>s+i.paid,0))}</td><td class="num">${money(z.reduce((s,i)=>s+(i.total-i.paid),0))}</td></tr>`;
+    return `<tr><td><b>${esc(v)}</b></td><td class="num">${z.length}</td><td class="num">${money(z.reduce((s,i)=>s+i.total,0))}</td><td class="num">${money(z.reduce((s,i)=>s+i.paid,0))}</td><td class="num">${money(z.reduce((s,i)=>s+(i.total-i.paid-(Number(i.laborAdvanceAmount)||0)),0))}</td></tr>`;
   }).join('')||'<tr><td colspan="5" class="muted" style="text-align:center;padding:24px">Aucune donnée.</td></tr>';
 }
 function clearReportFilters(){if($('rf'))$('rf').value='';if($('rt'))$('rt').value='';if($('rv'))$('rv').value='';renderReports();renderAdvancedReports()}
@@ -2205,7 +2229,7 @@ function buildQrData(obj,kind){
     lines.push('Total: '+money(obj.total));
     if(kind==='FACTURE'){
       lines.push('Payé: '+money(obj.paid));
-      lines.push('Solde: '+money(obj.total-obj.paid));
+      lines.push('Solde: '+money(obj.total-obj.paid-(Number(obj.laborAdvanceAmount)||0)));
     }
     if(obj.discount>0)lines.push('Rabais: '+money(obj.discount));
   } else {
@@ -2256,7 +2280,11 @@ function printDoc(kind,id,collection){
   const dateLines=kind==='PROFORMAT'
     ?`<tr><td style="color:#64748b;padding-right:10px;width:48%">Date</td><td style="text-align:right;font-weight:600">${fmtDate(obj.date)}</td></tr><tr><td style="color:#64748b;padding-right:10px;width:48%">Valable jusqu'au</td><td style="text-align:right;font-weight:600">${fmtDate(obj.validUntil)}</td></tr>`
     :`<tr><td style="color:#64748b;padding-right:10px;width:48%">Émission</td><td style="text-align:right;font-weight:600">${fmtDate(obj.date)}</td></tr><tr><td style="color:#64748b;padding-right:10px;width:48%">Échéance</td><td style="text-align:right;font-weight:600">${fmtDate(obj.dueDate||addDays(obj.date,30))}</td></tr>`;
-  const bal=obj.total-obj.paid;
+  
+  // BALANCE CALCULATION
+  const laborAdv = Number(obj.laborAdvanceAmount) || 0;
+  const bal = obj.total - obj.paid - laborAdv;
+
   const showPaid=(kind==='FACTURE');
   const lastPay=showPaid?getLastPayment(obj.no):null;
   const bankName=(C.bank||'SOLTECH ENERGIE');
@@ -2308,8 +2336,14 @@ function printDoc(kind,id,collection){
           ${obj.discount>0?`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Remise</span><span style="font-weight:600;color:#dc2626">− ${money(obj.discount)}</span></div>`:''}
           ${obj.taxRate>0?`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Taxe (${obj.taxRate}%)</span><span style="font-weight:600">${money(obj.taxAmount)}</span></div>`:''}
           <div style="display:flex;justify-content:space-between;padding:7px 0;border-top:2px solid #0f172a;border-bottom:2px solid #0f172a;margin-top:4px;font-size:13.5px"><span style="font-weight:800;text-transform:uppercase">${kind==='PROFORMAT'?'Total proformat':'Total'}</span><span style="color:#c65b20;font-weight:800;font-size:14.5px">${money(obj.total)}<span style="display:block;font-size:9.5px;color:#64748b;font-weight:400">${htg(obj.total,obj.rate||D.rate)}</span></span></div>
-          ${showPaid?`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Payé</span><span style="font-weight:600;color:#059669">${money(obj.paid)}</span></div>
-          ${lastPay?`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0;background:#f0fdf4"><span style="color:#64748b">Versement (${fmtDate(lastPay.date)})</span><span style="font-weight:600;color:#059669">${money(lastPay.amount)}</span></div>`:''}
+          ${showPaid?`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Versement</span><span style="font-weight:600;color:#059669">${money(obj.paid)}</span></div>
+          ${lastPay?`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0;background:#f0fdf4"><span style="color:#64748b">Dernier versement (${fmtDate(lastPay.date)})</span><span style="font-weight:600;color:#059669">${money(lastPay.amount)}</span></div>`:''}
+          ${laborAdv > 0 ? `
+            <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e2e8f0;background:#fff7ed;color:#c65b20">
+              <span style="font-weight:700">Avance MO: ${esc(obj.laborAdvanceDesc || 'Main d\'oeuvre')}</span>
+              <span style="font-weight:700">-${money(laborAdv)}</span>
+            </div>
+          ` : ''}
           <div style="display:flex;justify-content:space-between;padding:6px 0 4px;border-top:1px dashed #e2e8f0;border-bottom:1px solid #e2e8f0;margin-top:4px"><span style="color:#64748b;font-weight:700">Balance</span><span style="font-weight:800;color:${bal>0?'#dc2626':'#059669'}">${money(bal)}<span style="display:block;font-size:9.5px;color:#64748b;font-weight:400">${htg(bal,obj.rate||D.rate)}</span></span></div>`:''}
         </div>
       </div>
@@ -2531,6 +2565,8 @@ function buildThermalHTML(kind, obj, width){
   ).join('');
   const isFacture = kind === 'FACTURE';
   const title = isFacture ? 'FACTURE' : 'PROFORMAT';
+  const laborAdv = Number(obj.laborAdvanceAmount) || 0;
+  const bal = obj.total - obj.paid - laborAdv;
 
   return `<div class="thermal-receipt ${cls}">
     <div class="t-center t-huge">SOLTECH</div>
@@ -2564,7 +2600,11 @@ function buildThermalHTML(kind, obj, width){
       ${line}
       <table>
         <tr><td>Peye:</td><td class="t-right">${money(obj.paid)}</td></tr>
-        <tr><td class="t-bold">RÈS:</td><td class="t-right t-bold">${money(obj.total-obj.paid)}</td></tr>
+        ${laborAdv > 0 ? `
+          <tr><td colspan="2" style="padding-top:1mm;font-size:.8em;font-style:italic">Avans MO: ${esc(obj.laborAdvanceDesc || '')}</td></tr>
+          <tr><td>Montan:</td><td class="t-right">-${money(laborAdv)}</td></tr>
+        ` : ''}
+        <tr><td class="t-bold">RÈS:</td><td class="t-right t-bold">${money(bal)}</td></tr>
       </table>
     ` : ''}
     ${line}
